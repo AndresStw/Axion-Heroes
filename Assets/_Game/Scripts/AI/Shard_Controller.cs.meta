@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: e48b63df61ec02647aab53d8f21a31c1
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - miBarraDeVida: {instanceID: 0}
+  - rutaPadre: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -156,7 +156,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1261868665552642279}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.01745245, z: 0, w: 0.99984777}
   m_LocalPosition: {x: -228.30281, y: 0.0011399984, z: -231.74187}
   m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 0
@@ -165,7 +165,7 @@ Transform:
   - {fileID: 5222180123319199979}
   - {fileID: 6239892030219623113}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 2, z: 0}
 --- !u!95 &5487902938661363751
 Animator:
   serializedVersion: 7
@@ -182,7 +182,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
+  m_AnimatePhysics: 1
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -210,7 +210,7 @@ CapsuleCollider:
   m_Radius: 0.5
   m_Height: 1
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &634382097366360368
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -227,13 +227,13 @@ MonoBehaviour:
   enemyTag: RedTeam
   miBarraDeVida: {fileID: 4187394017704918441}
   waypoints: []
-  detectionRange: 15
+  detectionRange: 8
   waypointThreshold: 1.5
   maxHealth: 900
   health: 900
-  attackDamage: 45
-  attackRange: 5
-  attackSpeed: 0.6
+  attackDamage: 28
+  attackRange: 6
+  attackSpeed: 0.8
   rutaPadre: {fileID: 0}
   invertirRuta: 0
 --- !u!195 &7252960185692612967
@@ -245,8 +245,8 @@ NavMeshAgent:
   m_GameObject: {fileID: 1261868665552642279}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
-  m_Speed: 7.5
+  m_Radius: 0.3
+  m_Speed: 7
   m_Acceleration: 30
   avoidancePriority: 50
   m_AngularSpeed: 1000
@@ -257,7 +257,7 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 2
+  m_ObstacleAvoidanceType: 4
 --- !u!1 &1317135287542334396
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,10 +1,16 @@
 using UnityEngine;
-using UnityEngine.AI; // Añadimos esto para que reconozca NavMeshAgent más fácil
+using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
 
+// Definimos el sistema de equipos para que el script lo entienda
+public enum Team { Blue, Red }
+
 public class Shard_Spawner : MonoBehaviour
 {
+    [Header("Configuración de Equipo")]
+    public Team miEquipo; // Ahora aparecerá un menú desplegable en el Inspector
+
     [Header("Configuración de Oleada")]
     public GameObject meleePrefab;
     public GameObject casterPrefab;
@@ -18,11 +24,10 @@ public class Shard_Spawner : MonoBehaviour
     [Header("Ruta de los Shards")]
     public GameObject rutaPadre;
 
-    [Header("Configuración de Equipo y Tags")]
+    [Header("Configuración de Tags Automática")]
     public bool invertirRuta = false;
     public string teamTag = "BlueTeam";
     public string enemyTag = "RedTeam";
-    public string teamLayer = "BlueTeam";
 
     void Start()
     {
@@ -53,19 +58,31 @@ public class Shard_Spawner : MonoBehaviour
 
         GameObject newShard = Instantiate(prefabAInstanciar, transform.position, transform.rotation);
 
-        // CONFIGURAR TAG Y LAYER
+        // --- CONFIGURAR TAG Y LAYER (CORREGIDO) ---
         newShard.tag = teamTag;
-        newShard.layer = LayerMask.NameToLayer(teamLayer);
 
-        // CORRECCIÓN DE PRIORIDAD (Random con Mayúscula y Coma)
-        UnityEngine.AI.NavMeshAgent agent = newShard.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        // Asignamos la layer dinámicamente según el equipo
+        string layerName = (miEquipo == Team.Red) ? "RedTeam" : "BlueTeam";
+        int layerID = LayerMask.NameToLayer(layerName);
+
+        if (layerID != -1)
+        {
+            newShard.layer = layerID;
+        }
+        else
+        {
+            Debug.LogWarning("¡Andre! No olvides crear la Layer: " + layerName);
+        }
+
+        // --- PRIORIDAD DE NAVMESH ---
+        NavMeshAgent agent = newShard.GetComponent<NavMeshAgent>();
         if (agent != null)
         {
             agent.avoidancePriority = Random.Range(40, 61);
         }
 
+        // --- CONFIGURAR CONTROLADOR ---
         Shard_Controller controller = newShard.GetComponent<Shard_Controller>();
-
         if (controller != null)
         {
             controller.enemyTag = enemyTag;

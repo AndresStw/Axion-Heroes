@@ -40,13 +40,19 @@ public class Sentinel_Controller : MonoBehaviour
 
         foreach (Collider hit in hits)
         {
-            if (hit.CompareTag(enemyTag))
+            if (hit != null && !string.IsNullOrEmpty(enemyTag))
             {
-                float distance = Vector3.Distance(transform.position, hit.transform.position);
-                if (distance < closestDistance)
+                if (hit.CompareTag(enemyTag))
                 {
-                    closestDistance = distance;
-                    closestEnemy = hit.gameObject;
+                    // Calculamos la distancia real entre la torre y el objetivo
+                    float distance = Vector3.Distance(transform.position, hit.transform.position);
+
+                    // Si este enemigo está más cerca que el anterior, lo marcamos como objetivo
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        closestEnemy = hit.gameObject;
+                    }
                 }
             }
         }

@@ -7,14 +7,14 @@ public class Sentinel_Controller : MonoBehaviour
 
     [Header("Sentinel Settings")]
     public Team myTeam;
-    public string enemyTag; // "RedTeam" o "BlueTeam"
+    public string enemyTag; 
     public int health = 500;
     public float attackRange = 10f;
     public float attackCooldown = 1.5f;
     public int damage = 20;
 
     [Header("Visuals")]
-    public GameObject projectilePrefab; // Opcional: para disparar algo
+    public GameObject projectilePrefab; 
     public Transform firePoint;
 
     private float attackTimer;
@@ -44,10 +44,10 @@ public class Sentinel_Controller : MonoBehaviour
             {
                 if (hit.CompareTag(enemyTag))
                 {
-                    // Calculamos la distancia real entre la torre y el objetivo
+                    
                     float distance = Vector3.Distance(transform.position, hit.transform.position);
 
-                    // Si este enemigo está más cerca que el anterior, lo marcamos como objetivo
+                    
                     if (distance < closestDistance)
                     {
                         closestDistance = distance;
@@ -67,13 +67,13 @@ public class Sentinel_Controller : MonoBehaviour
         {
             attackTimer = 0;
 
-            // Lógica de daño
-            var enemy = currentTarget.GetComponent<Shard_Controller>();
+            
+            var enemy = currentTarget.GetComponent<Shard_Controller>();//me falta agregarle a los enemigos  con los script faltantes player, core,etc..
             if (enemy != null)
             {
                 enemy.TakeDamage(damage);
-                Debug.Log("Sentinel atacó a " + currentTarget.name);
-                // Aquí podrías instanciar un proyectil si lo tienes
+                Debug.Log("Sentinel atacó a " + currentTarget.name);//despues reemplazar por animacion y proyectil o efecto y visual
+
             }
         }
     }
@@ -81,7 +81,7 @@ public class Sentinel_Controller : MonoBehaviour
     public void TakeDamage(int damageAmount)
     {
         health -= damageAmount;
-        Debug.Log("Sentinel recibió daño. Vida restante: " + health);
+        Debug.Log("Sentinel recibió daño. Vida restante: " + health); //agregar barra de vida despues y la voz de notificacion de ataque solo la primera vez o con could down para no spamear
 
         if (health <= 0)
         {
@@ -91,8 +91,8 @@ public class Sentinel_Controller : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("Sentinel destruido");
-        // Aquí puedes poner efectos de explosión
+        Debug.Log("Sentinel destruido");//agregar animacion de destruccion y efectos visuales despues y la voz de notificacion de destruccion
+
         Destroy(gameObject);
     }
 

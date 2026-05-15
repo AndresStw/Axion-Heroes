@@ -8,24 +8,24 @@ public class Shard_Controller : MonoBehaviour
 {
     public enum Team { Blue, Red }
 
-    [Header("Team Settings")]
+    
     public Team myTeam;
     public string enemyTag;
     public Slider miBarraDeVida;
 
-    [Header("Movement & Path")]
+   
     public List<Vector3> waypoints = new List<Vector3>();
     private int currentWaypointIndex = 0;
     public float detectionRange = 15f;
     public float waypointThreshold = 1.5f;
 
-    [Header("Combat Stats")]
+    
     public int maxHealth = 50;
     public int health;
     public int attackDamage = 10;
     public float attackRange = 3f;
 
-    [Tooltip("A mayor número, más rápido ataca (ej: 1.5)")]
+   
     public float attackSpeed = 1.0f;
     private float attackTimer;
     protected NavMeshAgent agent;
@@ -33,7 +33,7 @@ public class Shard_Controller : MonoBehaviour
     protected GameObject currentTarget;
     private bool isDead = false;
 
-    [Header("Ruta de los Shards")]
+    
     public GameObject rutaPadre;
     public bool invertirRuta = false;
 
@@ -76,26 +76,24 @@ public class Shard_Controller : MonoBehaviour
     {
         if (isDead) return;
 
-        // 1. ESCANEO CONSTANTE
+       
         FindEnemy();
 
-        // 2. ANIMACIÓN (Siempre sincronizada)
+        
         if (anim != null)
         {
             anim.SetFloat("Speed", agent.velocity.sqrMagnitude);
         }
 
-        // 3. MÁQUINA DE ESTADOS (Prioridad Vertical)
+      
         if (currentTarget != null)
         {
-            // ESTADO DE COMBATE: Ignora Waypoints por completo
+           
             HandleCombat();
         }
         else
         {
-            // ESTADO DE PATRULLA: Solo si no hay amenazas
-
-            // Limpieza de estado de frenado
+            
             if (agent.isActiveAndEnabled && agent.isStopped)
             {
                 agent.isStopped = false;
@@ -145,7 +143,7 @@ public class Shard_Controller : MonoBehaviour
 
         GameObject bestTarget = null;
         float closestDistance = Mathf.Infinity;
-        int highestPriority = -1; // -1: nada, 1: Torre, 2: Héroe, 3: Shard/Minion
+        int highestPriority = -1; 
 
         foreach (Collider hit in hits)
         {
@@ -154,14 +152,12 @@ public class Shard_Controller : MonoBehaviour
                 float distance = Vector3.Distance(transform.position, hit.transform.position);
                 int currentPriority = 0;
 
-                // --- SISTEMA DE PRIORIDADES TIPO MLBB ---
-                if (hit.TryGetComponent(out Shard_Controller es)) currentPriority = 3; // Prioridad 1: Minions
-                else if (hit.TryGetComponent(out Sentinel_Controller sn)) currentPriority = 2; // Prioridad 2: Héroes
-                else currentPriority = 1; // Prioridad 3: Estructuras/Torres
+               
+                if (hit.TryGetComponent(out Shard_Controller es)) currentPriority = 3; 
+                else if (hit.TryGetComponent(out Sentinel_Controller sn)) currentPriority = 2;
+                else currentPriority = 1; 
 
-                // Lógica de elección:
-                // Si encontramos algo de mayor prioridad, lo elegimos sin importar la distancia (dentro del rango)
-                // Si la prioridad es igual, elegimos el más cercano.
+                
                 if (currentPriority > highestPriority)
                 {
                     highestPriority = currentPriority;
@@ -179,7 +175,7 @@ public class Shard_Controller : MonoBehaviour
         if (bestTarget != null)
         {
             currentTarget = bestTarget;
-            // No lo frenamos aquí, dejamos que HandleCombat decida cuándo frenar según el AttackRange
+       
         }
         else
         {
@@ -190,7 +186,7 @@ public class Shard_Controller : MonoBehaviour
     {
         if (currentTarget == null) return;
 
-        // Calculamos la distancia al centro para la lógica de ataque
+        
         float distance = Vector3.Distance(transform.position, currentTarget.transform.position);
 
         if (distance > attackRange + 0.2f)
@@ -199,12 +195,11 @@ public class Shard_Controller : MonoBehaviour
             {
                 agent.isStopped = false;
 
-                // --- MEJORA DE POSICIONAMIENTO ---
-                // En lugar de ir todos al centro, buscamos el punto más cercano en el borde del enemigo
+              
                 Collider enemyCollider = currentTarget.GetComponent<Collider>();
                 if (enemyCollider != null)
                 {
-                    // Esto hace que cada Shard elija "su propio punto" en la circunferencia de la torre
+                    
                     Vector3 puntoEnElBorde = enemyCollider.ClosestPoint(transform.position);
                     agent.SetDestination(puntoEnElBorde);
                 }
@@ -217,14 +212,14 @@ public class Shard_Controller : MonoBehaviour
         }
         else
         {
-            // FRENADO TOTAL (Mantenemos tu lógica de inercia cero)
+          
             if (agent.isActiveAndEnabled && !agent.isStopped)
             {
                 agent.isStopped = true;
                 agent.velocity = Vector3.zero;
             }
 
-            // ROTACIÓN AGRESIVA (Mantenemos tu rotación suave de 25f)
+          
             Vector3 direction = (currentTarget.transform.position - transform.position).normalized;
             direction.y = 0;
             if (direction != Vector3.zero)
@@ -233,7 +228,7 @@ public class Shard_Controller : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 25f);
             }
 
-            // ATAQUE INSTANTÁNEO Y CICLO (Mantenemos tu sistema de attackTimer)
+            
             if (attackTimer == 0f)
             {
                 ExecuteAttack();
@@ -268,15 +263,16 @@ public class Shard_Controller : MonoBehaviour
 
     IEnumerator SecuenciaDeDanoDoble()
     {
-        yield return new WaitForSeconds(0.3f); // Ajustado para menos delay
+        yield return new WaitForSeconds(0.3f);
         AplicarDanoProporcional(0.5f);
+
         yield return new WaitForSeconds(0.4f);
         AplicarDanoProporcional(0.5f);
     }
 
     IEnumerator SecuenciaDeDanoSimple()
     {
-        yield return new WaitForSeconds(0.3f); // Ajustado para menos delay
+        yield return new WaitForSeconds(0.3f); 
         AplicarDanoProporcional(1.0f);
     }
 
@@ -285,25 +281,24 @@ public class Shard_Controller : MonoBehaviour
         if (isDead || currentTarget == null) return;
         int danoFinal = Mathf.RoundToInt(attackDamage * porcentaje);
 
-        // 1. Daño a otros Shards (Minions)
-        if (currentTarget.TryGetComponent(out Shard_Controller enemyShard))
+      
+        if (currentTarget.TryGetComponent(out Shard_Controller enemyShard))// Prioridad 1: Atacar a otros Shards
         {
             enemyShard.TakeDamage(danoFinal);
         }
-        // 2. Daño a la Sentinel o Torres 
-        // (Si ambos usan el script Sentinel_Controller, esto cubrirá a los dos)
-        else if (currentTarget.TryGetComponent(out Sentinel_Controller enemySentinel))
+        
+        else if (currentTarget.TryGetComponent(out Sentinel_Controller enemySentinel)) // Prioridad 2: Atacar a Sentinels
         {
             enemySentinel.TakeDamage(danoFinal);
         }
-        // 3. Daño a Estructuras (Si usas un script diferente para las torres)
-        else if (currentTarget.TryGetComponent(out Sentinel_Controller enemyTower))
-        {
-            enemyTower.TakeDamage(danoFinal);
-        }
+      
+        //else if (currentTarget.TryGetComponent(out Red_Core enemyCore)) // Prioridad 3: Atacar a Red Core o nexo 
+        //{
+        //    enemyCore.TakeDamage(danoFinal);
+        //} // Falta agregar lógica para atacar a jugadores  y haciendo que si el jugador ataca al minion , el minion lo priorice por sobre los sentinels y otros shards
         else
         {
-            // Esto te avisará en la consola si le estás pegando a algo que no tiene script
+          
             Debug.LogWarning("Atacando a " + currentTarget.name + " pero no tiene un script de daño compatible.");
         }
     }
@@ -341,8 +336,6 @@ public class Shard_Controller : MonoBehaviour
             agent.isStopped = true;
             agent.enabled = false;
         }
-
-        // Ahora sí, llamamos a la corrutina que está dentro de la misma clase
         StartCoroutine(EsperarYDestruir());
     }
 

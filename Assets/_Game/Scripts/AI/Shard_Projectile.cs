@@ -2,27 +2,41 @@ using UnityEngine;
 
 public class Shard_Projectile : MonoBehaviour
 {
-    // Este script se encarga de mover el proyectil hacia el objetivo y aplicar daño al impactar
-    private GameObject target;//objetivo al que el proyectil se dirigirá
-    private int damage;// Daño que el proyectil infligirá al impactar
-    private Shard_Controller.Team team;// Equipo del proyectil para evitar dañar aliados
-    public float speed = 10f;// Velocidad del proyectil
+    public float speed = 10f;
+    public int damage = 20;
+    public float lifetime = 3f;
 
-    // El método Setup se llama al instanciar el proyectil para configurar su objetivo, daño y equipo
-    public void Setup(GameObject _target, int _damage, Shard_Controller.Team _team)
+    private GameObject target;
+
+    public void SetTarget(GameObject t)
     {
-        target = _target;
-        damage = _damage;
-        team = _team;
+        target = t;
     }
-    
+
+    void Start()
+    {
+        Destroy(gameObject, lifetime);
+    }
+
     void Update()
     {
-        if (target == null) { Destroy(gameObject); return; }
+        if (target == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
-        transform.position = Vector3.MoveTowards(transform.position, target.transform.position, speed * Time.deltaTime);
+        
+        Vector3 dir = (target.transform.position - transform.position).normalized;
+        transform.position += dir * speed * Time.deltaTime;
 
-        if (Vector3.Distance(transform.position, target.transform.position) < 0.2f)
+        
+        transform.rotation = Quaternion.LookRotation(dir);
+
+       
+        float distance = Vector3.Distance(transform.position, target.transform.position);
+
+        if (distance < 0.5f)
         {
             Impacto();
         }
@@ -30,11 +44,19 @@ public class Shard_Projectile : MonoBehaviour
 
     void Impacto()
     {
-        // Aplicamos daño usando tu lógica existente
-        if (target.TryGetComponent(out Shard_Controller enemy))
+        if (target == null) return;
+
+       
+        if (target.TryGetComponent(out Shard_Controller enemyShard))
         {
-            enemy.TakeDamage(damage);
+            enemyShard.TakeDamage(damage);
         }
+       
+        else if (target.TryGetComponent(out Sentinel_Controller enemySentinel))
+        {
+            enemySentinel.TakeDamage(damage);
+        }
+
         Destroy(gameObject);
     }
 }

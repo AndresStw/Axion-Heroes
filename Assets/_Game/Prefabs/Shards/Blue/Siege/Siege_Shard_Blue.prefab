@@ -182,7 +182,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_AnimatePhysics: 1
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -227,7 +227,7 @@ MonoBehaviour:
   enemyTag: RedTeam
   miBarraDeVida: {fileID: 4187394017704918441}
   waypoints: []
-  detectionRange: 8
+  detectionRange: 15
   waypointThreshold: 1.5
   maxHealth: 900
   health: 900
@@ -1421,6 +1421,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5610813486252759530, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5921018060608541830, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5921018060608541830, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}
+      propertyPath: m_Color.g
+      value: 0.7490196
+      objectReference: {fileID: 0}
+    - target: {fileID: 5921018060608541830, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}
+      propertyPath: m_Color.r
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6036426292126200616, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}

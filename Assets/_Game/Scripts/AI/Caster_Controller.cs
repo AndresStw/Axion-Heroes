@@ -3,16 +3,18 @@ using System.Collections;
 
 public class Caster_Controller : Shard_Controller
 {
-    [Header("Caster Settings")]
+    
     public GameObject projectilePrefab;
-    public Transform firePoint;
+    public Transform firePointR;
+    public Transform firePointL;
+    private bool dispararDerecha = true;
 
     protected override void Start()
     {
-        base.Start(); // Llama al Start del Shard original
+        base.Start(); 
     }
 
-    // Sobrescribimos el ataque para que dispare en vez de golpear
+    
     protected override void ExecuteAttack()
     {
         if (anim != null)
@@ -25,15 +27,22 @@ public class Caster_Controller : Shard_Controller
 
     IEnumerator LanzarHechizo()
     {
-        yield return new WaitForSeconds(0.3f); // Tiempo para que levante la mano
+        yield return new WaitForSeconds(1f);
 
-        if (currentTarget != null && projectilePrefab != null && firePoint != null)
+        if (currentTarget != null && projectilePrefab != null && firePointL != null && firePointR != null)
         {
-            // Instanciar el proyectil
-            GameObject projGO = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+            Transform puntoActual = dispararDerecha ? firePointR : firePointL;
 
-            // Si el proyectil tiene un script de lógica, le pasamos el daño y el objetivo
-            // Ejemplo: projGO.GetComponent<Projectile>().Setup(currentTarget, attackDamage);
+            Vector3 direccion = (currentTarget.transform.position - puntoActual.position).normalized;
+
+            GameObject proj = Instantiate(projectilePrefab, puntoActual.position, Quaternion.identity);
+
+            proj.GetComponent<Shard_Projectile>().SetTarget(currentTarget);
+
+
+            proj.transform.rotation = Quaternion.LookRotation(direccion);
+
+            dispararDerecha = !dispararDerecha;
         }
     }
 }

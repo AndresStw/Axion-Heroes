@@ -1,82 +1,27 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class MobaCamera : MonoBehaviour
 {
-    [Header("Movement")]
-    public float moveSpeed = 30f;
-    public float edgeSize = 15f;
+    [Header("Hero Support")]
+    [Tooltip("¡Arrastra a tu héroe aquí en el Inspector!")]
+    public Transform playerHero;
 
-    [Header("Zoom")]
-    public float zoomSpeed = 20f;
-    public float minHeight = 10f;
-    public float maxHeight = 80f;
+    [Header("Configuración de Distancia")]
+    public Vector3 offset = new Vector3(0f, 15f, -10f); // Altura y distancia hacia atrás
+    public float smoothSpeed = 10f;
 
-    [Header("Map Bounds")]
-    public float minX = -250f;
-    public float maxX = 250f;
-    public float minZ = -250f;
-    public float maxZ = 250f;
-
-    void Update()
+    void Start()
     {
-        MoveCamera();
-        ZoomCamera();
+        // Ángulo de inclinación clásico de MOBA mirando al campo
+        transform.rotation = Quaternion.Euler(55f, 0f, 0f);
     }
 
-    void MoveCamera()
+    void LateUpdate()
     {
-        Vector3 move = Vector3.zero;
+        if (playerHero == null) return;
 
-        // WASD
-        if (Keyboard.current.wKey.isPressed)
-            move += Vector3.forward;
-
-        if (Keyboard.current.sKey.isPressed)
-            move += Vector3.back;
-
-        if (Keyboard.current.aKey.isPressed)
-            move += Vector3.left;
-
-        if (Keyboard.current.dKey.isPressed)
-            move += Vector3.right;
-
-        // Edge scrolling
-        Vector2 mousePos = Mouse.current.position.ReadValue();
-
-        if (mousePos.x >= Screen.width - edgeSize)
-            move += Vector3.right;
-
-        if (mousePos.x <= edgeSize)
-            move += Vector3.left;
-
-        if (mousePos.y >= Screen.height - edgeSize)
-            move += Vector3.forward;
-
-        if (mousePos.y <= edgeSize)
-            move += Vector3.back;
-
-        transform.position += move.normalized * moveSpeed * Time.deltaTime;
-
-        // Clamp map bounds
-        Vector3 pos = transform.position;
-
-        pos.x = Mathf.Clamp(pos.x, minX, maxX);
-        pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
-
-        transform.position = pos;
-    }
-
-    void ZoomCamera()
-    {
-        float scroll = Mouse.current.scroll.ReadValue().y;
-
-        Vector3 pos = transform.position;
-
-        pos.y -= scroll * zoomSpeed * Time.deltaTime;
-
-        pos.y = Mathf.Clamp(pos.y, minHeight, maxHeight);
-
-        transform.position = pos;
+        // La cámara sigue de forma constante y fluida la posición del héroe
+        Vector3 targetPosition = playerHero.position + offset;
+        transform.position = Vector3.Lerp(transform.position, targetPosition, smoothSpeed * Time.deltaTime);
     }
 }

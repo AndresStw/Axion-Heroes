@@ -17,7 +17,7 @@ public class Ruk_Controller : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
 
-        // Ajustes PRO del agente (feeling tipo MOBA)
+        
         agent.acceleration = 20f;
         agent.angularSpeed = 720f;
         agent.speed = 5f;
@@ -25,7 +25,7 @@ public class Ruk_Controller : MonoBehaviour
 
     void Update()
     {
-        // 🚫 NO moverse si está atacando
+        
         if (anim.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
             return;
 

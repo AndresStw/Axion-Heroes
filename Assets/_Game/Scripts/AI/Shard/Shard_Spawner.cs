@@ -3,13 +3,13 @@ using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
 
-// Definimos el sistema de equipos para que el script lo entienda
+
 public enum Team { Blue, Red }
 
 public class Shard_Spawner : MonoBehaviour
 {
     [Header("Configuración de Equipo")]
-    public Team miEquipo; // Ahora aparecerá un menú desplegable en el Inspector
+    public Team miEquipo; 
 
     [Header("Configuración de Oleada")]
     public GameObject meleePrefab;
@@ -58,10 +58,8 @@ public class Shard_Spawner : MonoBehaviour
 
         GameObject newShard = Instantiate(prefabAInstanciar, transform.position, transform.rotation);
 
-        // --- CONFIGURAR TAG Y LAYER (CORREGIDO) ---
         newShard.tag = teamTag;
 
-        // Asignamos la layer dinámicamente según el equipo
         string layerName = (miEquipo == Team.Red) ? "RedTeam" : "BlueTeam";
         int layerID = LayerMask.NameToLayer(layerName);
 
@@ -74,14 +72,12 @@ public class Shard_Spawner : MonoBehaviour
             Debug.LogWarning("¡Andre! No olvides crear la Layer: " + layerName);
         }
 
-        // --- PRIORIDAD DE NAVMESH ---
         NavMeshAgent agent = newShard.GetComponent<NavMeshAgent>();
         if (agent != null)
         {
             agent.avoidancePriority = Random.Range(40, 61);
         }
 
-        // --- CONFIGURAR CONTROLADOR ---
         Shard_Controller controller = newShard.GetComponent<Shard_Controller>();
         if (controller != null)
         {
@@ -99,5 +95,19 @@ public class Shard_Spawner : MonoBehaviour
                 controller.waypoints = posicionesFijas;
             }
         }
+    }
+
+    public List<Vector3> ObtenerPuntosDeRuta()
+    {
+        List<Vector3> posiciones = new List<Vector3>();
+        if (rutaPadre != null)
+        {
+            foreach (Transform child in rutaPadre.transform)
+            {
+                posiciones.Add(child.position);
+            }
+            if (invertirRuta) posiciones.Reverse();
+        }
+        return posiciones;
     }
 }

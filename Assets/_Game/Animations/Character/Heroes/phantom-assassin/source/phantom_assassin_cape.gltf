@@ -1,0 +1,723 @@
+{
+  "asset": {
+    "copyright": "",
+    "generator": "Source 2 Viewer 7.0.0.0 - https://valveresourceformat.github.io",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 370,
+      "max": [
+        3.1748907566070557,
+        42.33510208129883,
+        145.72474670410156
+      ],
+      "min": [
+        -41.72254943847656,
+        -42.50420379638672,
+        16.24396514892578
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 370,
+      "max": [
+        0.9937742352485657,
+        0.9288003444671631
+      ],
+      "min": [
+        0.002471999265253544,
+        0.009765923023223877
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 370,
+      "max": [
+        0.9993062615394592,
+        0.9895864725112915,
+        0.7352146506309509
+      ],
+      "min": [
+        -0.9993062615394592,
+        -0.9922779202461243,
+        -0.7352146506309509
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 370,
+      "max": [
+        0.7092993855476379,
+        0.7672157883644104,
+        1,
+        1
+      ],
+      "min": [
+        -0.13767902553081512,
+        -0.7733088731765747,
+        0.2557385265827179,
+        -1
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 370,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 370,
+      "max": [
+        1,
+        0.4588235318660736,
+        0.3294117748737335,
+        0
+      ],
+      "min": [
+        0.34117648005485535,
+        0,
+        0,
+        0
+      ],
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5125,
+      "count": 1488,
+      "type": "SCALAR"
+    },
+    {
+      "name": "Bind Matrices",
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 23,
+      "max": [
+        1,
+        0.8806174993515015,
+        0.6690205931663513,
+        0,
+        0.8708950877189636,
+        1,
+        1.0000001192092896,
+        0,
+        0.9999821186065674,
+        0.4439002573490143,
+        1,
+        0,
+        131.51454162597656,
+        40.50642776489258,
+        137.73187255859375,
+        1
+      ],
+      "min": [
+        -0.4550815522670746,
+        -1,
+        -0.9999821186065674,
+        0,
+        -0.19617468118667603,
+        -0.650915265083313,
+        -0.7324952483177185,
+        0,
+        -1,
+        -0.15827813744544983,
+        -0.9583171606063843,
+        0,
+        -147.39419555664062,
+        -72.99532318115234,
+        -137.73184204101562,
+        1
+      ],
+      "type": "MAT4"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 4440,
+      "byteOffset": 17792,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2960,
+      "byteOffset": 26672,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4440,
+      "byteOffset": 22232,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 5920,
+      "byteOffset": 5952,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2960,
+      "byteOffset": 29632,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 5920,
+      "byteOffset": 11872,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 5952,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1472,
+      "byteOffset": 32592
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 34064,
+      "uri": "phantom_assassin_cape.bin"
+    }
+  ],
+  "images": [
+    {
+      "name": "phantom_assassin_cape_color_psd_e5875162.vtex",
+      "uri": "phantom_assassin_cape_color_psd_e5875162.png"
+    },
+    {
+      "name": "phantom_assassin_cape_normal_psd_adbb819a.vtex",
+      "uri": "phantom_assassin_cape_normal_psd_adbb819a.png"
+    },
+    {
+      "name": "phantom_assassin_cape_detailmask_tga_1dd4daee_orm_1921329595.png",
+      "uri": "phantom_assassin_cape_detailmask_tga_1dd4daee_orm_1921329595.png"
+    }
+  ],
+  "materials": [
+    {
+      "extras": {
+        "baseColorTexture": {
+          "index": 0
+        }
+      },
+      "name": "phantom_assassin_cape_color",
+      "alphaMode": "MASK",
+      "emissiveTexture": {
+        "index": 2
+      },
+      "normalTexture": {
+        "index": 1
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "phantom_assassin_cape.vmdl_c.phantom_assassin_back",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "TEXCOORD_0": 1,
+            "NORMAL": 2,
+            "TANGENT": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "phantom_assassin_cape.vmdl_c",
+      "children": [
+        1
+      ],
+      "matrix": [
+        3.027916E-09,
+        0,
+        0.025399996,
+        0,
+        0.025399996,
+        3.027916E-09,
+        0,
+        0,
+        0,
+        0.025399996,
+        3.027916E-09,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "root",
+      "children": [
+        2
+      ],
+      "translation": [
+        -4.164063,
+        -0,
+        103.375
+      ]
+    },
+    {
+      "name": "spine1",
+      "children": [
+        3
+      ],
+      "rotation": [
+        4.6770886E-08,
+        -0.6979725,
+        1.4930775E-08,
+        0.71612465
+      ],
+      "translation": [
+        1.0676494,
+        -3.9790393E-13,
+        9.087044
+      ]
+    },
+    {
+      "name": "spine2",
+      "children": [
+        4
+      ],
+      "rotation": [
+        -4.2976996E-08,
+        -0.06471692,
+        5.8845453E-09,
+        0.99790365
+      ],
+      "translation": [
+        12.258308,
+        9.999999E-07,
+        1.4305115E-06
+      ]
+    },
+    {
+      "name": "spine3",
+      "children": [
+        5,
+        19,
+        21,
+        23
+      ],
+      "rotation": [
+        1.2514635E-15,
+        -0.0627045,
+        5.481799E-09,
+        0.99803215
+      ],
+      "translation": [
+        15.290306,
+        6.6475695E-07,
+        -5.722046E-06
+      ]
+    },
+    {
+      "name": "capebase1_0",
+      "children": [
+        6,
+        11,
+        16
+      ],
+      "rotation": [
+        -2.7755602E-17,
+        7.4505717E-09,
+        -2.2898322E-15,
+        1
+      ],
+      "translation": [
+        0.40715027,
+        9.1296897E-07,
+        11.558784
+      ]
+    },
+    {
+      "name": "cape_L_R0C0",
+      "children": [
+        7
+      ],
+      "rotation": [
+        0.31936353,
+        0.6504224,
+        0.6694298,
+        -0.16377263
+      ],
+      "translation": [
+        -5.097702,
+        17.360008,
+        3.726781
+      ]
+    },
+    {
+      "name": "cape_L_R1C0",
+      "children": [
+        8
+      ],
+      "rotation": [
+        0.033820383,
+        0.08131124,
+        -0.077909924,
+        0.9930633
+      ],
+      "translation": [
+        12.065567,
+        0.00021362305,
+        0.0001335144
+      ]
+    },
+    {
+      "name": "cape_L_R2C0",
+      "children": [
+        9
+      ],
+      "rotation": [
+        -0.0034088402,
+        -0.010832534,
+        -0.011003275,
+        0.999875
+      ],
+      "translation": [
+        25.044724,
+        0.00022125244,
+        9.1552734E-05
+      ]
+    },
+    {
+      "name": "cape_L_R3C0",
+      "children": [
+        10
+      ],
+      "rotation": [
+        0.0009187915,
+        0.005063512,
+        -0.11411176,
+        0.99345464
+      ],
+      "translation": [
+        24.14048,
+        0.0002861023,
+        0.00012588501
+      ]
+    },
+    {
+      "name": "cape_L_R4C0",
+      "rotation": [
+        0.0009474132,
+        0.0290776,
+        -0.03255205,
+        0.9990465
+      ],
+      "translation": [
+        20.739586,
+        0.00030899048,
+        0.00019264221
+      ]
+    },
+    {
+      "name": "cape_R_R0C0",
+      "children": [
+        12
+      ],
+      "rotation": [
+        0.16377228,
+        0.66942966,
+        0.6504224,
+        -0.31936374
+      ],
+      "translation": [
+        -5.0976715,
+        -17.360094,
+        3.7267923
+      ]
+    },
+    {
+      "name": "cape_R_R1C0",
+      "children": [
+        13
+      ],
+      "rotation": [
+        -0.033822946,
+        -0.081317425,
+        -0.077909805,
+        0.99306273
+      ],
+      "translation": [
+        12.065529,
+        0.00024414062,
+        -0.00015640259
+      ]
+    },
+    {
+      "name": "cape_R_R2C0",
+      "children": [
+        14
+      ],
+      "rotation": [
+        0.0034093799,
+        0.010834369,
+        -0.011003225,
+        0.99987495
+      ],
+      "translation": [
+        25.044678,
+        0.00025177002,
+        -0.00010108948
+      ]
+    },
+    {
+      "name": "cape_R_R3C0",
+      "children": [
+        15
+      ],
+      "rotation": [
+        -0.00091675937,
+        -0.0050520916,
+        -0.11411189,
+        0.99345464
+      ],
+      "translation": [
+        24.140472,
+        0.00033187866,
+        -0.00015830994
+      ]
+    },
+    {
+      "name": "cape_R_R4C0",
+      "rotation": [
+        -0.0009476817,
+        -0.029084789,
+        -0.032551955,
+        0.9990463
+      ],
+      "translation": [
+        20.739616,
+        0.00031661987,
+        -0.00020217896
+      ]
+    },
+    {
+      "name": "cape_M_R0C0",
+      "children": [
+        17
+      ],
+      "rotation": [
+        0.12069113,
+        0.69669276,
+        0.69671184,
+        -0.12101832
+      ],
+      "translation": [
+        -18.557495,
+        0.009631708,
+        12.655049
+      ]
+    },
+    {
+      "name": "cape_M_R1C0",
+      "children": [
+        18
+      ],
+      "rotation": [
+        -0.00028874615,
+        -0.0026491345,
+        -0.005583505,
+        0.99998087
+      ],
+      "translation": [
+        20.904312,
+        0.0001335144,
+        9.49949E-07
+      ]
+    },
+    {
+      "name": "cape_M_R2C0",
+      "rotation": [
+        0.00012525573,
+        0.0024297812,
+        -0.05147899,
+        0.9986711
+      ],
+      "translation": [
+        23.170761,
+        0.00019073486,
+        3.7252903E-06
+      ]
+    },
+    {
+      "name": "clavicle_R",
+      "children": [
+        20
+      ],
+      "rotation": [
+        0.6355076,
+        0.31004855,
+        -0.5702979,
+        -0.41804346
+      ],
+      "translation": [
+        1.5846558,
+        -6.2109995,
+        -0.4846859
+      ]
+    },
+    {
+      "name": "bicep_R",
+      "rotation": [
+        -0.68541,
+        0.28426275,
+        0.4454795,
+        0.500955
+      ],
+      "translation": [
+        -13.032881,
+        5.9127808E-05,
+        -0.0005340576
+      ]
+    },
+    {
+      "name": "clavicle_L",
+      "children": [
+        22
+      ],
+      "rotation": [
+        0.57029796,
+        0.41804335,
+        0.6355075,
+        0.31004867
+      ],
+      "translation": [
+        1.58461,
+        6.210989,
+        -0.48467064
+      ]
+    },
+    {
+      "name": "bicep_L",
+      "rotation": [
+        -0.6854099,
+        0.2842628,
+        0.44547927,
+        0.5009551
+      ],
+      "translation": [
+        13.032911,
+        -2.4795532E-05,
+        0.00033569336
+      ]
+    },
+    {
+      "name": "neck1",
+      "rotation": [
+        -4.5836006E-15,
+        0.11738069,
+        -1.0261746E-08,
+        0.993087
+      ],
+      "translation": [
+        7.7109528,
+        3.2822754E-07,
+        -3.6239624E-05
+      ]
+    },
+    {
+      "name": "phantom_assassin_cape.vmdl_c.phantom_assassin_back",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "scenes": [
+    {
+      "name": "phantom_assassin_cape.vmdl_c",
+      "nodes": [
+        0,
+        24
+      ]
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 7,
+      "joints": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        11,
+        7,
+        12,
+        16,
+        8,
+        13,
+        19,
+        17,
+        9,
+        14,
+        21,
+        20,
+        18,
+        10,
+        15,
+        22,
+        23
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "name": "phantom_assassin_cape_color_psd_e5875162.vtex",
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "name": "phantom_assassin_cape_normal_psd_adbb819a.vtex",
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "name": "phantom_assassin_cape_detailmask_tga_1dd4daee_orm_1921329595.png",
+      "sampler": 0,
+      "source": 2
+    }
+  ]
+}

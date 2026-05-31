@@ -14,8 +14,8 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
-  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_Fog: 1
+  m_FogColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.01
   m_LinearFogStart: 0
@@ -259,6 +259,78 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 356800084230884876, guid: 788c78117bcf25f4da711b1cee3001d1, type: 3}
   m_PrefabInstance: {fileID: 4373680180207699367}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &131389579
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -66.19
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.3884053
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 52.48
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.110397965
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.9938875
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -167.323
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      propertyPath: m_Name
+      value: Illiakan v1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 643163947}
+  m_SourcePrefab: {fileID: 100100000, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
 --- !u!1 &133422766
 GameObject:
   m_ObjectHideFlags: 0
@@ -1299,6 +1371,33 @@ Transform:
   - {fileID: 1773529293}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &643163945 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: cec2f7eaa9631f74287d5530e0fdec8f, type: 3}
+  m_PrefabInstance: {fileID: 131389579}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &643163947
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 643163945}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b834a0c0bf3d5774d90a105acfed6cad, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &700017518
 GameObject:
   m_ObjectHideFlags: 0
@@ -1947,23 +2046,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8497b10b6cbcd334285639e985e95e9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroController
+  stats: {fileID: 11400000, guid: 95eac51404223084399ec78175143633, type: 2}
   baseRespawnTime: 6
   timeIncrementPerLevel: 2
   nivel: 1
   experienciaActual: 0
   experienciaParaSiguienteNivel: 100
   maxLevel: 25
-  miRol: 0
   esBot: 0
   tiempoParaAFK: 10
-  maxHealth: 100
-  movementSpeed: 8
   mobileJoystick: {fileID: 2126136771}
-  attackRange: 1.5
-  attackDamage: 10
-  velocidadAtaque: 1
-  skillCooldown: 5
-  ultiCooldown: 12
 --- !u!4 &1078342531 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8737123535388727117, guid: 242a5cc1b39069a4ebe8efc4d45070eb, type: 3}
@@ -6857,6 +6949,18 @@ PrefabInstance:
       value: BlueTeam
       objectReference: {fileID: 0}
     - target: {fileID: 8737123535388727117, guid: 242a5cc1b39069a4ebe8efc4d45070eb, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8737123535388727117, guid: 242a5cc1b39069a4ebe8efc4d45070eb, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8737123535388727117, guid: 242a5cc1b39069a4ebe8efc4d45070eb, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8737123535388727117, guid: 242a5cc1b39069a4ebe8efc4d45070eb, type: 3}
       propertyPath: m_LocalPosition.x
       value: -151.23074
       objectReference: {fileID: 0}
@@ -7472,3 +7576,4 @@ SceneRoots:
   - {fileID: 824340071}
   - {fileID: 1037584978}
   - {fileID: 1681251934}
+  - {fileID: 131389579}

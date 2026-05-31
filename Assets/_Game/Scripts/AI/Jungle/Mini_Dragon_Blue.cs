@@ -10,7 +10,6 @@ public class MiniDragon_Blue : Dragon_Blue
 
     protected override void Start()
     {
-        // Aplicamos stats del mini dragon
         health = miniHealth;
         maxHealth = health;
 
@@ -19,10 +18,8 @@ public class MiniDragon_Blue : Dragon_Blue
         moveSpeed = miniMoveSpeed;
         attackSpeed = miniAttackSpeed;
 
-        // Ejecutamos la lógica base
         base.Start();
 
-        // Actualizar velocidad del NavMesh
         if (agent != null)
         {
             agent.speed = moveSpeed;

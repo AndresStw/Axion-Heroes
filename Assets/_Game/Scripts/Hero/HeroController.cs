@@ -9,6 +9,9 @@ public class HeroController : MonoBehaviour
     private Animator anim;
     private HeroBotAI botAI;
 
+    [Header("Referencia de Datos")]
+    public HeroData stats; // ¡Todo lo fijo ahora vive aquí!
+
     [Header("Respawn Config")]
     [SerializeField] private float baseRespawnTime = 6f;
     [SerializeField] private float timeIncrementPerLevel = 2f;
@@ -20,35 +23,28 @@ public class HeroController : MonoBehaviour
     public float experienciaParaSiguienteNivel = 100f;
     public float maxLevel = 25f;
 
-    [Header("--- Configuración de Rol e IA ---")]
-    public HeroRole miRol = HeroRole.Fighter;
+    [Header(" Configuración de Rol & IA ")]
     public bool esBot = false;
     public float tiempoParaAFK = 10f;
     private float tiempoInactivo = 0f;
 
-    [Header("--- Stats del Héroe ---")]
-    [SerializeField] private float maxHealth = 100f;
+    [Header("Estado del Héroe ")]
     private float currentHealth;
     private bool isDead = false;
 
     [Header("Movimiento")]
-    [SerializeField] private float movementSpeed = 5f;
     [SerializeField] private VariableJoystick mobileJoystick;
 
-    [Header(" Sistema de Combate (Simulado)")]
-    [SerializeField] private float attackRange = 1.5f;
-    [SerializeField] private int attackDamage = 10;
-    [SerializeField] private float velocidadAtaque = 1f;
+    [Header(" Sistema de Combate (Simulado mientras tengo los personajes )")]
     private float tiempoSiguienteAtaque = 0f;
     private bool isAttacking = false;
 
-    [Header("--- Habilidades & Ulti ---")]
-    [SerializeField] private float skillCooldown = 5f;
-    [SerializeField] private float ultiCooldown = 12f;
+    [Header(" Habilidades & Ulti ")]
     private float nextSkillTime = 0f;
     private float nextUltiTime = 0f;
-
-    public float AttackRange => attackRange;
+ 
+    [Header("")]
+    public float AttackRange => stats.attackRange; // Ahora lee del ScriptableObject
     public bool IsAttacking => isAttacking;
 
     void Start()
@@ -57,13 +53,14 @@ public class HeroController : MonoBehaviour
         anim = GetComponent<Animator>();
         botAI = GetComponent<HeroBotAI>();
 
-        currentHealth = maxHealth;
+        // Inicializamos usando los datos del ScriptableObject
+        currentHealth = stats.maxHealth;
 
         if (agent != null)
         {
             agent.acceleration = 30f;
             agent.angularSpeed = 1000f;
-            agent.speed = movementSpeed;
+            agent.speed = stats.movementSpeed;
             agent.stoppingDistance = 0.1f;
         }
 
@@ -141,7 +138,7 @@ public class HeroController : MonoBehaviour
     private void ActivarIA()
     {
         if (botAI == null) botAI = gameObject.AddComponent<HeroBotAI>();
-        botAI.miRol = this.miRol;
+        botAI.miRol = stats.role; // Accedemos al rol desde los stats
         botAI.ActivarBot();
     }
 
@@ -175,7 +172,7 @@ public class HeroController : MonoBehaviour
 
             if (agent != null && agent.enabled)
             {
-                agent.velocity = movementDirection * movementSpeed;
+                agent.velocity = movementDirection * stats.movementSpeed;
             }
 
             SetAnimatorFloatSafe("Speed", 1f);
@@ -191,7 +188,7 @@ public class HeroController : MonoBehaviour
             SetAnimatorFloatSafe("Speed", 0f);
         }
 
-        float healthNormalized = currentHealth / maxHealth;
+        float healthNormalized = currentHealth / stats.maxHealth;
         SetAnimatorFloatSafe("Health", healthNormalized);
     }
 
@@ -207,7 +204,7 @@ public class HeroController : MonoBehaviour
         if (isDead || Time.time < tiempoSiguienteAtaque) return;
 
         isAttacking = true;
-        tiempoSiguienteAtaque = Time.time + velocidadAtaque;
+        tiempoSiguienteAtaque = Time.time + (1f / stats.attackSpeed); // Usamos la velocidad de ataque del asset
 
         if (agent != null && agent.enabled) agent.ResetPath();
 
@@ -219,15 +216,15 @@ public class HeroController : MonoBehaviour
     private void AplicarDanoRaycastSimulado()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, transform.forward, out hit, attackRange))
+        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, transform.forward, out hit, stats.attackRange))
         {
-            Debug.Log($"[GOLPE SIMULADO] Impactó a: {hit.collider.name} infligiendo {attackDamage} de daño.");
+            Debug.Log($"[GOLPE SIMULADO] Impactó a: {hit.collider.name} infligiendo {stats.attackDamage} de daño.");
         }
     }
 
     private void ResetearEstadoAtaqueSimulado()
     {
-        if (isAttacking && Time.time >= tiempoSiguienteAtaque - (velocidadAtaque * 0.3f))
+        if (isAttacking && Time.time >= tiempoSiguienteAtaque - ((1f / stats.attackSpeed) * 0.3f))
         {
             isAttacking = false;
         }
@@ -236,7 +233,6 @@ public class HeroController : MonoBehaviour
     private void SetAnimatorFloatSafe(string paramName, float value)
     {
         if (anim == null) return;
-
         foreach (AnimatorControllerParameter param in anim.parameters)
         {
             if (param.name == paramName)
@@ -251,11 +247,11 @@ public class HeroController : MonoBehaviour
     {
         if (isDead) return;
         currentHealth -= damage;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        currentHealth = Mathf.Clamp(currentHealth, 0, stats.maxHealth);
 
         if (botAI != null && esBot)
         {
-            botAI.NotificarDanoRecibido(currentHealth / maxHealth);
+            botAI.NotificarDanoRecibido(currentHealth / stats.maxHealth);
         }
 
         if (currentHealth <= 0) Die();
@@ -287,10 +283,10 @@ public class HeroController : MonoBehaviour
     private void Respawn()
     {
         isDead = false;
-        currentHealth = maxHealth;
+        currentHealth = stats.maxHealth;
         tiempoInactivo = 0f;
 
-        transform.position = Vector3.zero; // Reemplazar en el futuro con la posición exacta de  Fuente/Base
+        transform.position = Vector3.zero; 
 
         if (agent != null) agent.enabled = true;
 
@@ -328,6 +324,6 @@ public class HeroController : MonoBehaviour
         Debug.Log("¡Subiste al nivel " + nivel + "!");
     }
 
-    public void ExecuteSkill() { if (!isDead && Time.time >= nextSkillTime) { nextSkillTime = Time.time + skillCooldown; if (anim != null) anim.SetTrigger("DoSkill"); } }
-    public void ExecuteUltimate() { if (!isDead && Time.time >= nextUltiTime) { nextUltiTime = Time.time + ultiCooldown; if (anim != null) anim.SetTrigger("DoUlti"); } }
+    public void ExecuteSkill() { if (!isDead && Time.time >= nextSkillTime) { nextSkillTime = Time.time + stats.skillCooldown; if (anim != null) anim.SetTrigger("DoSkill"); } }
+    public void ExecuteUltimate() { if (!isDead && Time.time >= nextUltiTime) { nextUltiTime = Time.time + stats.ultiCooldown; if (anim != null) anim.SetTrigger("DoUlti"); } }
 }

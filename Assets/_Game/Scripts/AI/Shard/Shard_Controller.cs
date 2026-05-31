@@ -8,7 +8,7 @@ public class Shard_Controller : MonoBehaviour
 {
     public enum Team { Blue, Red }
 
-    [Header("Configuración de Facción")]
+    [Header("Configuración de Grupo")]
     public Team myTeam;
     public string enemyTag;
     [SerializeField] private Shard_EvolutionManager myEvolutionManager; // Asignar el ScriptableObject de su color
@@ -52,7 +52,7 @@ public class Shard_Controller : MonoBehaviour
 
     protected virtual void Start()
     {
-        // ESCALADO GLOBAL: Ajustar estadísticas según la evolución de la facción
+        // ESCALADO GLOBAL: Ajustar estadísticas según la evolución del grupo 
         if (myEvolutionManager != null)
         {
             maxHealth = myEvolutionManager.GetScaledMaxHealth(baseMaxHealth);
@@ -146,7 +146,7 @@ public class Shard_Controller : MonoBehaviour
         if (waypoints == null || waypoints.Count == 0 || currentWaypointIndex >= waypoints.Count) return;
         if (agent.isActiveAndEnabled) agent.SetDestination(waypoints[currentWaypointIndex]);
     }
-
+#region 
     void FindEnemy()
     {
         if (currentTarget != null && waypoints.Count > 0)
@@ -200,7 +200,7 @@ public class Shard_Controller : MonoBehaviour
         if (bestTarget != null) currentTarget = bestTarget;
         else if (currentTarget == null && waypoints.Count > 0) SetNextDestination();
     }
-
+#region Mecanicas de combate
     void HandleCombat()
     {
         if (currentTarget == null) return;
@@ -253,6 +253,9 @@ public class Shard_Controller : MonoBehaviour
             }
         }
     }
+
+#endregion
+#region Ejecucion ataques
 
     protected virtual void ExecuteAttack()
     {
@@ -331,7 +334,7 @@ public class Shard_Controller : MonoBehaviour
             textNivelUI.text = "Nv. " + myEvolutionManager.currentLevel;
         }
     }
-
+#endregion
     void Die()
     {
         if (isDead) return;

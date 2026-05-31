@@ -72,9 +72,9 @@ public class HeroBotAI : MonoBehaviour
                 bool esTop = nombrePropio.Contains("top") || nombrePadre.Contains("top");
                 bool esBotLane = nombrePropio.Contains("bot") || nombrePadre.Contains("bot");
 
-                if ((miRol == HeroRole.Mage && esMid) ||
-                    (miRol == HeroRole.Fighter && esTop) ||
-                    ((miRol == HeroRole.Marksman || miRol == HeroRole.Support) && esBotLane))
+                if ((miRol == HeroRole.Caster && esMid) ||
+                    (miRol == HeroRole.Vanguardista && esTop) ||
+                    ((miRol == HeroRole. Artillero || miRol == HeroRole.Operador) && esBotLane))
                 {
                     misWaypoints = spawner.ObtenerPuntosDeRuta();
                     if (misWaypoints.Count > 0) puntoRetiradaBase = misWaypoints[0];

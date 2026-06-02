@@ -200,7 +200,8 @@ public class Shard_Controller : MonoBehaviour
         if (bestTarget != null) currentTarget = bestTarget;
         else if (currentTarget == null && waypoints.Count > 0) SetNextDestination();
     }
-#region Mecanicas de combate
+    #endregion
+    #region Mecanicas de combate
     void HandleCombat()
     {
         if (currentTarget == null) return;

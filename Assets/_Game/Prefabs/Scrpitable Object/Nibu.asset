@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77bec7edaabb5ae43b95bc6cb7dd744b, type: 3}
+  m_Name: Nibu
+  m_EditorClassIdentifier: Assembly-CSharp::HeroData
+  heroName: nibu
+  role: 0
+  heroIcon: {fileID: 0}
+  maxHealth: 2890
+  physicalDefense: 23
+  magicalDefense: 21
+  attackRange: 9
+  attackSpeed: 1
+  attackDamage: 23
+  movementSpeed: 9
+  skillCooldown: 0
+  ultiCooldown: 0
+  nivel: 0
+  cooldownReductionPerLevel: 0
+  skillDamage: 0
+  ultiDamage: 0
+  skillRange: 0
+  ultiRange: 0
+  skillManaCost: 0
+  ultiManaCost: 0
+  manaRegenRate: 0
+  experiencePoints: 0
+  goldValue: 0
+  attackcooldown: 0

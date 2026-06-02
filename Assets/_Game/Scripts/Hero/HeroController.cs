@@ -5,12 +5,13 @@ using AxionHeroes.Gameplay;
 
 public class HeroController : MonoBehaviour
 {
-    private NavMeshAgent agent;
+    private NavMeshAgent agent;//para el movimiento del héroe, aunque también se puede mover con transform.Translate o algo así, pero el NavMeshAgent ya me da la ventaja de poder navegar por el mapa sin preocuparme por obstáculos o cosas así, y también me facilita la implementación de la IA del bot luego.
+    
     private Animator anim;
     private HeroBotAI botAI;
 
     [Header("Referencia de Datos")]
-    public HeroData stats; // ¡Todo lo fijo ahora vive aquí!
+    public HeroData stats;//scriptable object con las estadísticas del héroe, como vida, daño, velocidad de movimiento, etc.
 
     [Header("Respawn Config")]
     [SerializeField] private float baseRespawnTime = 6f;
@@ -44,32 +45,56 @@ public class HeroController : MonoBehaviour
     private float nextUltiTime = 0f;
  
     [Header("")]
-    public float AttackRange => stats.attackRange; // Ahora lee del ScriptableObject
+    public float AttackRange => stats.attackRange; 
     public bool IsAttacking => isAttacking;
+    public bool IsDead => isDead;
+    public float CurrentHealth => currentHealth;
+
+
+    [Header("Referencias de Combate")]
+    public Transform currentTarget; // El enemigo al que el bot/héroe apunta
+    public float attackDamage = 50f; // Puedes sacar esto de 'stats' si prefieres
+    public float porcentaje = 1.0f; // Multiplicador de daño
+    public EvolutionManager myEvolutionManager; // Asumiendo que este es tu sistema de exp
+    public float expParaEvolucionPorTorre = 50f;
 
     void Start()
+{
+    agent = GetComponent<NavMeshAgent>();
+    anim = GetComponent<Animator>();
+    botAI = GetComponent<HeroBotAI>();
+
+    if (anim == null)
     {
-        agent = GetComponent<NavMeshAgent>();
-        anim = GetComponent<Animator>();
-        botAI = GetComponent<HeroBotAI>();
-
-        // Inicializamos usando los datos del ScriptableObject
-        currentHealth = stats.maxHealth;
-
-        if (agent != null)
+        Debug.LogError(
+            $"[{name}] Animator no encontrado."
+        );
+    }
+    else
+    {
+        if (!HasParameter("Attack"))
         {
-            agent.acceleration = 30f;
-            agent.angularSpeed = 1000f;
-            agent.speed = stats.movementSpeed;
-            agent.stoppingDistance = 0.1f;
-        }
-
-        if (esBot && botAI != null)
-        {
-            ActivarIA();
+            Debug.LogWarning(
+                $"[{name}] No existe Trigger Attack."
+            );
         }
     }
 
+    currentHealth = stats.maxHealth;
+
+    if (agent != null)
+    {
+        agent.acceleration = 30f;
+        agent.angularSpeed = 1000f;
+        agent.speed = stats.movementSpeed;
+        agent.stoppingDistance = 0.1f;
+    }
+
+    if (esBot)
+    {
+        ActivarIA();
+    }
+}
     void Update()
     {
         if (isDead) return;
@@ -102,7 +127,7 @@ public class HeroController : MonoBehaviour
         public bool tieneInput;
     }
 
-    private InputData ObtenerInput()
+    private InputData ObtenerInput()//joystick
     {
         InputData data = new InputData();
         data.h = Input.GetAxisRaw("Horizontal");
@@ -119,26 +144,39 @@ public class HeroController : MonoBehaviour
     }
 
     private void VerificarInactividadAFK(InputData input)
+{
+    if (!input.tieneInput)
     {
-        if (!input.tieneInput)
+        tiempoInactivo += Time.deltaTime;
+
+        if (tiempoInactivo >= tiempoParaAFK)
         {
-            tiempoInactivo += Time.deltaTime;
-            if (tiempoInactivo >= tiempoParaAFK)
-            {
-                esBot = true;
-                ActivarIA();
-            }
-        }
-        else
-        {
-            tiempoInactivo = 0f;
+            esBot = true;
+            ActivarIA();
         }
     }
+    else
+    {
+        tiempoInactivo = 0f;
+    }
+}
+    private bool HasParameter(string paramName)
+{
+    if (anim == null) return false;
+
+    foreach (AnimatorControllerParameter param in anim.parameters)
+    {
+        if (param.name == paramName)
+            return true;
+    }
+
+    return false;
+}
 
     private void ActivarIA()
     {
         if (botAI == null) botAI = gameObject.AddComponent<HeroBotAI>();
-        botAI.miRol = stats.role; // Accedemos al rol desde los stats
+        botAI.miRol = stats.role; 
         botAI.ActivarBot();
     }
 
@@ -151,14 +189,15 @@ public class HeroController : MonoBehaviour
     }
 
     private void HandleBotAnimations()
-    {
-        if (agent != null && agent.enabled)
-        {
-            if (agent.velocity.magnitude > 0.1f) SetAnimatorFloatSafe("Speed", 1f);
-            else SetAnimatorFloatSafe("Speed", 0f);
-        }
-    }
+{
+    if (agent == null || !agent.enabled)
+        return;
 
+    SetAnimatorFloatSafe(
+        "Speed",
+        agent.velocity.sqrMagnitude > 0.01f ? 1f : 0f
+    );
+}
     private void HandleMovement(InputData input)
     {
         if (isAttacking) return;
@@ -199,22 +238,78 @@ public class HeroController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R) && Time.time >= nextUltiTime) ExecuteUltimate();
     }
 
-    public void ExecuteAttackBasic()
+   public void ExecuteAttackBasic()
+{
+    Debug.Log(name + " -> ExecuteAttackBasic llamado");
+
+    if (isDead)
     {
-        if (isDead || Time.time < tiempoSiguienteAtaque) return;
-
-        isAttacking = true;
-        tiempoSiguienteAtaque = Time.time + (1f / stats.attackSpeed); // Usamos la velocidad de ataque del asset
-
-        if (agent != null && agent.enabled) agent.ResetPath();
-
-        if (anim != null) anim.SetTrigger("DoAttack");
-
-        AplicarDanoRaycastSimulado();
+        Debug.Log("Muerto");
+        return;
     }
 
-    private void AplicarDanoRaycastSimulado()
+    if (Time.time < tiempoSiguienteAtaque)
     {
+        Debug.Log("En cooldown");
+        return;
+    }
+    if (Time.time < tiempoSiguienteAtaque)
+        return;
+
+    isAttacking = true;
+
+    Debug.Log(name + " ATACA");
+
+    if (anim != null)
+    {
+        anim.ResetTrigger("Attack");
+        anim.SetTrigger("Attack");
+    }
+
+    tiempoSiguienteAtaque =
+        Time.time + (1f / stats.attackSpeed);
+
+    if (currentTarget == null)
+        return;
+
+    int danoFinal =
+        Mathf.RoundToInt(
+            attackDamage * porcentaje
+        );
+
+    if (currentTarget.TryGetComponent(
+        out Shard_Controller enemyShard))
+    {
+        enemyShard.TakeDamage(danoFinal);
+
+        Debug.Log(
+            "Golpeó shard: " +
+            enemyShard.name
+        );
+    }
+    else if (currentTarget.TryGetComponent(
+        out Sentinel_Controller enemySentinel))
+    {
+        enemySentinel.TakeDamage(danoFinal);
+
+        Debug.Log(
+            "Golpeó sentinel: " +
+            enemySentinel.name
+        );
+    }
+    else if (currentTarget.TryGetComponent(
+        out HeroController enemyHero))
+    {
+        enemyHero.TakeDamage(danoFinal);
+
+        Debug.Log(
+            "Golpeó héroe: " +
+            enemyHero.name
+        );
+    }
+}    private void AplicarDanoRaycastSimulado()//debug para simular el ataque básico mientras no tengo los personajes ni las animaciones definitivas, luego se puede reemplazar por la lógica real de daño que quiera implementar.
+    {
+       
         RaycastHit hit;
         if (Physics.Raycast(transform.position + Vector3.up * 0.5f, transform.forward, out hit, stats.attackRange))
         {
@@ -223,12 +318,12 @@ public class HeroController : MonoBehaviour
     }
 
     private void ResetearEstadoAtaqueSimulado()
+{
+    if (Time.time >= tiempoSiguienteAtaque)
     {
-        if (isAttacking && Time.time >= tiempoSiguienteAtaque - ((1f / stats.attackSpeed) * 0.3f))
-        {
-            isAttacking = false;
-        }
+        isAttacking = false;
     }
+}
 
     private void SetAnimatorFloatSafe(string paramName, float value)
     {
@@ -300,7 +395,7 @@ public class HeroController : MonoBehaviour
         Debug.Log("[RESPAWN] El héroe ha vuelto a la batalla.");
     }
 
-    public void LevelExperience(float cantidad)
+    public void LevelExperience(float cantidad)//Experimental
     {
         if (nivel >= maxLevel) return;
 

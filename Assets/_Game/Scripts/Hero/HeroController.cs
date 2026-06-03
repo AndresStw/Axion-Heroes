@@ -5,7 +5,7 @@ using AxionHeroes.Gameplay;
 
 public class HeroController : MonoBehaviour
 {
-    private NavMeshAgent agent;//para el movimiento del héroe, aunque también se puede mover con transform.Translate o algo así, pero el NavMeshAgent ya me da la ventaja de poder navegar por el mapa sin preocuparme por obstáculos o cosas así, y también me facilita la implementación de la IA del bot luego.
+    private NavMeshAgent agent;//para el movimiento del héroe, aunque también se puede mover con transform.Translate o algo así, pero el NavMeshAgent ya me da la ventaja de poder navegar por el map[...]
     
     private Animator anim;
     private HeroBotAI botAI;
@@ -36,8 +36,15 @@ public class HeroController : MonoBehaviour
     [Header("Movimiento")]
     [SerializeField] private VariableJoystick mobileJoystick;
 
-    [Header(" Sistema de Combate (Simulado mientras tengo los personajes )")]
-    private float tiempoSiguienteAtaque = 0f;
+    [Header(" Sistema de Combate - Ataques Básicos ")]
+    [SerializeField] private float normalAttackCooldown = 1.0f; // Enfriamiento del ataque básico normal
+    [SerializeField] private float quickAttackCooldown = 0.5f; // Enfriamiento de ataques consecutivos
+    [SerializeField] private float burstAttackCooldown = 3.0f; // Enfriamiento de la ráfaga
+    [SerializeField] private int attacksBeforeBurst = 5; // Número de básicos consecutivos antes de activar la ráfaga
+    
+    private int attackCount = 0; // Conteo de ataques consecutivos
+    private bool isInBurstMode = false; // Indica si está en modo ráfaga
+    private float nextAttackTime = 0f; // Temporizador para ataques
     private bool isAttacking = false;
 
     [Header(" Habilidades & Ulti ")]
@@ -59,42 +66,49 @@ public class HeroController : MonoBehaviour
     public float expParaEvolucionPorTorre = 50f;
 
     void Start()
-{
-    agent = GetComponent<NavMeshAgent>();
-    anim = GetComponent<Animator>();
-    botAI = GetComponent<HeroBotAI>();
+    {
+        agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
+        botAI = GetComponent<HeroBotAI>();
 
-    if (anim == null)
-    {
-        Debug.LogError(
-            $"[{name}] Animator no encontrado."
-        );
-    }
-    else
-    {
-        if (!HasParameter("Attack"))
+        if (anim == null)
         {
-            Debug.LogWarning(
-                $"[{name}] No existe Trigger Attack."
+            Debug.LogError(
+                $"[{name}] Animator no encontrado."
             );
+        }
+        else
+        {
+            if (!HasParameter("Attack"))
+            {
+                Debug.LogWarning(
+                    $"[{name}] No existe Trigger Attack."
+                );
+            }
+            if (!HasParameter("Burst"))
+            {
+                Debug.LogWarning(
+                    $"[{name}] No existe Trigger Burst para la ráfaga."
+                );
+            }
+        }
+
+        currentHealth = stats.maxHealth;
+
+        if (agent != null)
+        {
+            agent.acceleration = 30f;
+            agent.angularSpeed = 1000f;
+            agent.speed = stats.movementSpeed;
+            agent.stoppingDistance = 0.1f;
+        }
+
+        if (esBot)
+        {
+            ActivarIA();
         }
     }
 
-    currentHealth = stats.maxHealth;
-
-    if (agent != null)
-    {
-        agent.acceleration = 30f;
-        agent.angularSpeed = 1000f;
-        agent.speed = stats.movementSpeed;
-        agent.stoppingDistance = 0.1f;
-    }
-
-    if (esBot)
-    {
-        ActivarIA();
-    }
-}
     void Update()
     {
         if (isDead) return;
@@ -144,34 +158,35 @@ public class HeroController : MonoBehaviour
     }
 
     private void VerificarInactividadAFK(InputData input)
-{
-    if (!input.tieneInput)
     {
-        tiempoInactivo += Time.deltaTime;
-
-        if (tiempoInactivo >= tiempoParaAFK)
+        if (!input.tieneInput)
         {
-            esBot = true;
-            ActivarIA();
+            tiempoInactivo += Time.deltaTime;
+
+            if (tiempoInactivo >= tiempoParaAFK)
+            {
+                esBot = true;
+                ActivarIA();
+            }
+        }
+        else
+        {
+            tiempoInactivo = 0f;
         }
     }
-    else
-    {
-        tiempoInactivo = 0f;
-    }
-}
+
     private bool HasParameter(string paramName)
-{
-    if (anim == null) return false;
-
-    foreach (AnimatorControllerParameter param in anim.parameters)
     {
-        if (param.name == paramName)
-            return true;
-    }
+        if (anim == null) return false;
 
-    return false;
-}
+        foreach (AnimatorControllerParameter param in anim.parameters)
+        {
+            if (param.name == paramName)
+                return true;
+        }
+
+        return false;
+    }
 
     private void ActivarIA()
     {
@@ -189,15 +204,16 @@ public class HeroController : MonoBehaviour
     }
 
     private void HandleBotAnimations()
-{
-    if (agent == null || !agent.enabled)
-        return;
+    {
+        if (agent == null || !agent.enabled)
+            return;
 
-    SetAnimatorFloatSafe(
-        "Speed",
-        agent.velocity.sqrMagnitude > 0.01f ? 1f : 0f
-    );
-}
+        SetAnimatorFloatSafe(
+            "Speed",
+            agent.velocity.sqrMagnitude > 0.01f ? 1f : 0f
+        );
+    }
+
     private void HandleMovement(InputData input)
     {
         if (isAttacking) return;
@@ -238,76 +254,155 @@ public class HeroController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.R) && Time.time >= nextUltiTime) ExecuteUltimate();
     }
 
-   public void ExecuteAttackBasic()
-{
-    Debug.Log(name + " -> ExecuteAttackBasic llamado");
-
-    if (isDead)
+    /// <summary>
+    /// Ejecuta el ataque básico con sistema de combos y ráfagas
+    /// Primer ataque: animación completa
+    /// Ataques consecutivos: animación acortada para fluidez
+    /// Después de N ataques: activa ráfaga con ambas armas
+    /// </summary>
+    public void ExecuteAttackBasic()
     {
-        Debug.Log("Muerto");
-        return;
+        Debug.Log(name + " -> ExecuteAttackBasic llamado");
+
+        if (isDead)
+        {
+            Debug.Log("Muerto");
+            return;
+        }
+
+        if (Time.time < nextAttackTime)
+        {
+            Debug.Log("En cooldown");
+            return;
+        }
+
+        // Verifica si se activa la ráfaga
+        if (attackCount >= attacksBeforeBurst)
+        {
+            TriggerBurstAttack();
+            return;
+        }
+
+        // Dispara la animación según si es el ataque completo o recortado
+        if (attackCount == 0)
+        {
+            PlayBasicAttackFull();
+        }
+        else
+        {
+            PlayBasicAttackQuick();
+        }
+
+        // Incrementa el contador de ataques consecutivos
+        attackCount++;
+        nextAttackTime = Time.time + (attackCount == 1 ? normalAttackCooldown : quickAttackCooldown);
+        
+        // Resetea el conteo si el jugador es demasiado lento
+        StartCoroutine(ResetAttackCombo());
     }
 
-    if (Time.time < tiempoSiguienteAtaque)
+    private void PlayBasicAttackFull()
     {
-        Debug.Log("En cooldown");
-        return;
-    }
-    if (Time.time < tiempoSiguienteAtaque)
-        return;
+        isAttacking = true;
 
-    isAttacking = true;
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.SetTrigger("Attack");
+        }
 
-    Debug.Log(name + " ATACA");
+        Debug.Log(name + " realiza un ataque completo con un arma");
 
-    if (anim != null)
-    {
-        anim.ResetTrigger("Attack");
-        anim.SetTrigger("Attack");
+        // Aplica el daño al objetivo si existe
+        AplicarDanoAlObjetivo();
     }
 
-    tiempoSiguienteAtaque =
-        Time.time + (1f / stats.attackSpeed);
-
-    if (currentTarget == null)
-        return;
-
-    int danoFinal =
-        Mathf.RoundToInt(
-            attackDamage * porcentaje
-        );
-
-    if (currentTarget.TryGetComponent(
-        out Shard_Controller enemyShard))
+    private void PlayBasicAttackQuick()
     {
-        enemyShard.TakeDamage(danoFinal);
+        isAttacking = true;
 
-        Debug.Log(
-            "Golpeó shard: " +
-            enemyShard.name
-        );
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.SetTrigger("Attack");
+        }
+
+        Debug.Log(name + " realiza ataque consecutivo fluido con un arma (Combo: " + attackCount + ")");
+
+        // Aplica el daño al objetivo si existe
+        AplicarDanoAlObjetivo();
     }
-    else if (currentTarget.TryGetComponent(
-        out Sentinel_Controller enemySentinel))
+
+    private void TriggerBurstAttack()
     {
-        enemySentinel.TakeDamage(danoFinal);
+        if (isInBurstMode) return;
 
-        Debug.Log(
-            "Golpeó sentinel: " +
-            enemySentinel.name
-        );
+        isAttacking = true;
+
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.ResetTrigger("Burst");
+            anim.SetTrigger("Burst");
+        }
+
+        Debug.Log(name + " ¡Activó la ráfaga con ambas manos!");
+
+        // Aplica daño inmediato
+        AplicarDanoAlObjetivo();
+
+        // Reinicia el contador y el cooldown para ataques
+        isInBurstMode = true;
+        attackCount = 0;
+        nextAttackTime = Time.time + burstAttackCooldown;
+
+        // Salir de modo ráfaga después de la animación
+        StartCoroutine(ResetBurstMode());
     }
-    else if (currentTarget.TryGetComponent(
-        out HeroController enemyHero))
+
+    private IEnumerator ResetAttackCombo()
     {
-        enemyHero.TakeDamage(danoFinal);
-
-        Debug.Log(
-            "Golpeó héroe: " +
-            enemyHero.name
-        );
+        yield return new WaitForSeconds(1.5f); // Define el tiempo límite para continuar un combo
+        if (attackCount > 0)
+        {
+            attackCount = 0; // Si se supera este tiempo, se reinicia el contador
+            Debug.Log(name + " - Combo reseteado por inactividad");
+        }
     }
-}    private void AplicarDanoRaycastSimulado()//debug para simular el ataque básico mientras no tengo los personajes ni las animaciones definitivas, luego se puede reemplazar por la lógica real de daño que quiera implementar.
+
+    private IEnumerator ResetBurstMode()
+    {
+        yield return new WaitForSeconds(1.0f); // Ajusta la duración de la ráfaga
+        isInBurstMode = false;
+        isAttacking = false;
+        Debug.Log(name + " - Modo ráfaga terminado");
+    }
+
+    private void AplicarDanoAlObjetivo()
+    {
+        if (currentTarget == null)
+            return;
+
+        int danoFinal = Mathf.RoundToInt(attackDamage * porcentaje);
+
+        if (currentTarget.TryGetComponent(out Shard_Controller enemyShard))
+        {
+            enemyShard.TakeDamage(danoFinal);
+            Debug.Log("Golpeó shard: " + enemyShard.name);
+        }
+        else if (currentTarget.TryGetComponent(out Sentinel_Controller enemySentinel))
+        {
+            enemySentinel.TakeDamage(danoFinal);
+            Debug.Log("Golpeó sentinel: " + enemySentinel.name);
+        }
+        else if (currentTarget.TryGetComponent(out HeroController enemyHero))
+        {
+            enemyHero.TakeDamage(danoFinal);
+            Debug.Log("Golpeó héroe: " + enemyHero.name);
+        }
+    }
+
+    private void AplicarDanoRaycastSimulado()//debug para simular el ataque básico mientras no tengo los personajes ni las animaciones definitivas, luego se puede reemplazar por la lógica real de d[...]
     {
        
         RaycastHit hit;
@@ -318,12 +413,12 @@ public class HeroController : MonoBehaviour
     }
 
     private void ResetearEstadoAtaqueSimulado()
-{
-    if (Time.time >= tiempoSiguienteAtaque)
     {
-        isAttacking = false;
+        if (Time.time >= nextAttackTime && isAttacking)
+        {
+            isAttacking = false;
+        }
     }
-}
 
     private void SetAnimatorFloatSafe(string paramName, float value)
     {
@@ -380,6 +475,8 @@ public class HeroController : MonoBehaviour
         isDead = false;
         currentHealth = stats.maxHealth;
         tiempoInactivo = 0f;
+        attackCount = 0; // Resetea el combo al respawnear
+        isInBurstMode = false;
 
         transform.position = Vector3.zero; 
 

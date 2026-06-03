@@ -5,13 +5,13 @@ using AxionHeroes.Gameplay;
 
 public class HeroController : MonoBehaviour
 {
-    private NavMeshAgent agent;//para el movimiento del héroe, aunque también se puede mover con transform.Translate o algo así, pero el NavMeshAgent ya me da la ventaja de poder navegar por el map[...]
+    private NavMeshAgent agent;
     
     private Animator anim;
     private HeroBotAI botAI;
 
     [Header("Referencia de Datos")]
-    public HeroData stats;//scriptable object con las estadísticas del héroe, como vida, daño, velocidad de movimiento, etc.
+    public HeroData stats;
 
     [Header("Respawn Config")]
     [SerializeField] private float baseRespawnTime = 6f;
@@ -36,16 +36,19 @@ public class HeroController : MonoBehaviour
     [Header("Movimiento")]
     [SerializeField] private VariableJoystick mobileJoystick;
 
-    [Header(" Sistema de Combate - Ataques Básicos ")]
-    [SerializeField] private float normalAttackCooldown = 1.0f; // Enfriamiento del ataque básico normal
-    [SerializeField] private float quickAttackCooldown = 0.5f; // Enfriamiento de ataques consecutivos
-    [SerializeField] private float burstAttackCooldown = 3.0f; // Enfriamiento de la ráfaga
-    [SerializeField] private int attacksBeforeBurst = 5; // Número de básicos consecutivos antes de activar la ráfaga
+    [Header(" Sistema de Combate - Ataques Automáticos ")]
+    [SerializeField] private float normalAttackCooldown = 1.0f;
+    [SerializeField] private float quickAttackCooldown = 0.5f;
+    [SerializeField] private float burstAttackCooldown = 3.0f;
+    [SerializeField] private int attacksBeforeBurst = 5;
+    [SerializeField] private float detectionRange = 15f; // Rango de detección de enemigos
+    [SerializeField] private bool autoAttackEnabled = false; // Ataque automático activado
     
-    private int attackCount = 0; // Conteo de ataques consecutivos
-    private bool isInBurstMode = false; // Indica si está en modo ráfaga
-    private float nextAttackTime = 0f; // Temporizador para ataques
+    private int attackCount = 0;
+    private bool isInBurstMode = false;
+    private float nextAttackTime = 0f;
     private bool isAttacking = false;
+    private Coroutine autoAttackRoutine;
 
     [Header(" Habilidades & Ulti ")]
     private float nextSkillTime = 0f;
@@ -57,12 +60,11 @@ public class HeroController : MonoBehaviour
     public bool IsDead => isDead;
     public float CurrentHealth => currentHealth;
 
-
     [Header("Referencias de Combate")]
-    public Transform currentTarget; // El enemigo al que el bot/héroe apunta
-    public float attackDamage = 50f; // Puedes sacar esto de 'stats' si prefieres
-    public float porcentaje = 1.0f; // Multiplicador de daño
-    public EvolutionManager myEvolutionManager; // Asumiendo que este es tu sistema de exp
+    public Transform currentTarget;
+    public float attackDamage = 50f;
+    public float porcentaje = 1.0f;
+    public EvolutionManager myEvolutionManager;
     public float expParaEvolucionPorTorre = 50f;
 
     void Start()
@@ -73,23 +75,21 @@ public class HeroController : MonoBehaviour
 
         if (anim == null)
         {
-            Debug.LogError(
-                $"[{name}] Animator no encontrado."
-            );
+            Debug.LogError($"[{name}] Animator no encontrado.");
         }
         else
         {
             if (!HasParameter("Attack"))
             {
-                Debug.LogWarning(
-                    $"[{name}] No existe Trigger Attack."
-                );
+                Debug.LogWarning($"[{name}] No existe Trigger Attack.");
+            }
+            if (!HasParameter("AttackQuick"))
+            {
+                Debug.LogWarning($"[{name}] No existe Trigger AttackQuick.");
             }
             if (!HasParameter("Burst"))
             {
-                Debug.LogWarning(
-                    $"[{name}] No existe Trigger Burst para la ráfaga."
-                );
+                Debug.LogWarning($"[{name}] No existe Trigger Burst para la ráfaga.");
             }
         }
 
@@ -132,6 +132,12 @@ public class HeroController : MonoBehaviour
         HandleMovement(input);
         HandleKeyboardInput();
         ResetearEstadoAtaqueSimulado();
+        
+        // Busca automáticamente enemigos si el ataque automático está habilitado
+        if (autoAttackEnabled)
+        {
+            BuscarEnemigoCercano();
+        }
     }
 
     private struct InputData
@@ -141,7 +147,7 @@ public class HeroController : MonoBehaviour
         public bool tieneInput;
     }
 
-    private InputData ObtenerInput()//joystick
+    private InputData ObtenerInput()
     {
         InputData data = new InputData();
         data.h = Input.GetAxisRaw("Horizontal");
@@ -249,32 +255,136 @@ public class HeroController : MonoBehaviour
 
     private void HandleKeyboardInput()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) ExecuteAttackBasic();
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            // Alternar ataque automático
+            ToggleAutoAttack();
+        }
         if (Input.GetKeyDown(KeyCode.Q) && Time.time >= nextSkillTime) ExecuteSkill();
         if (Input.GetKeyDown(KeyCode.R) && Time.time >= nextUltiTime) ExecuteUltimate();
     }
 
     /// <summary>
-    /// Ejecuta el ataque básico con sistema de combos y ráfagas
-    /// Primer ataque: animación completa
-    /// Ataques consecutivos: animación acortada para fluidez
-    /// Después de N ataques: activa ráfaga con ambas armas
+    /// Alterna el ataque automático ON/OFF
     /// </summary>
-    public void ExecuteAttackBasic()
+    public void ToggleAutoAttack()
     {
-        Debug.Log(name + " -> ExecuteAttackBasic llamado");
+        if (isDead) return;
 
-        if (isDead)
+        autoAttackEnabled = !autoAttackEnabled;
+
+        if (autoAttackEnabled)
         {
-            Debug.Log("Muerto");
-            return;
+            Debug.Log(name + " - ATAQUE AUTOMÁTICO ACTIVADO");
+            BuscarEnemigoCercano();
+            if (autoAttackRoutine != null)
+                StopCoroutine(autoAttackRoutine);
+            autoAttackRoutine = StartCoroutine(AutoAttackRoutine());
+        }
+        else
+        {
+            Debug.Log(name + " - ATAQUE AUTOMÁTICO DESACTIVADO");
+            if (autoAttackRoutine != null)
+            {
+                StopCoroutine(autoAttackRoutine);
+                autoAttackRoutine = null;
+            }
+            currentTarget = null;
+            attackCount = 0;
+        }
+    }
+
+    /// <summary>
+    /// Busca el enemigo con menor vida dentro del rango de detección
+    /// </summary>
+    private void BuscarEnemigoCercano()
+    {
+        Collider[] enemigos = Physics.OverlapSphere(transform.position, detectionRange);
+        Transform mejorObjetivo = null;
+        float menorVida = float.MaxValue;
+
+        foreach (Collider col in enemigos)
+        {
+            // Busca Shards
+            if (col.TryGetComponent(out Shard_Controller shard))
+            {
+                if (shard.GetHealth() < menorVida)
+                {
+                    menorVida = shard.GetHealth();
+                    mejorObjetivo = col.transform;
+                }
+            }
+            // Busca Sentinels
+            else if (col.TryGetComponent(out Sentinel_Controller sentinel))
+            {
+                if (sentinel.GetHealth() < menorVida)
+                {
+                    menorVida = sentinel.GetHealth();
+                    mejorObjetivo = col.transform;
+                }
+            }
+            // Busca Héroes enemigos
+            else if (col.TryGetComponent(out HeroController hero))
+            {
+                if (hero != this && !hero.IsDead && hero.CurrentHealth < menorVida)
+                {
+                    menorVida = hero.CurrentHealth;
+                    mejorObjetivo = col.transform;
+                }
+            }
         }
 
+        currentTarget = mejorObjetivo;
+    }
+
+    /// <summary>
+    /// Rutina de ataque automático continuo
+    /// </summary>
+    private IEnumerator AutoAttackRoutine()
+    {
+        while (autoAttackEnabled && !isDead)
+        {
+            // Si no hay objetivo, busca uno
+            if (currentTarget == null)
+            {
+                BuscarEnemigoCercano();
+            }
+
+            // Si hay objetivo y está en rango, ataca
+            if (currentTarget != null)
+            {
+                float distancia = Vector3.Distance(transform.position, currentTarget.position);
+                if (distancia <= stats.attackRange)
+                {
+                    // Rota hacia el objetivo
+                    Vector3 direccion = (currentTarget.position - transform.position).normalized;
+                    Quaternion targetRotation = Quaternion.LookRotation(direccion);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
+
+                    // Ejecuta el ataque
+                    ExecuteAutoAttack();
+                }
+                else
+                {
+                    // Se mueve hacia el objetivo si está fuera de rango
+                    if (agent != null && agent.enabled)
+                    {
+                        agent.SetDestination(currentTarget.position);
+                    }
+                }
+            }
+
+            yield return null;
+        }
+    }
+
+    /// <summary>
+    /// Ejecuta un ataque automático del combo
+    /// </summary>
+    private void ExecuteAutoAttack()
+    {
         if (Time.time < nextAttackTime)
-        {
-            Debug.Log("En cooldown");
             return;
-        }
 
         // Verifica si se activa la ráfaga
         if (attackCount >= attacksBeforeBurst)
@@ -293,12 +403,8 @@ public class HeroController : MonoBehaviour
             PlayBasicAttackQuick();
         }
 
-        // Incrementa el contador de ataques consecutivos
         attackCount++;
         nextAttackTime = Time.time + (attackCount == 1 ? normalAttackCooldown : quickAttackCooldown);
-        
-        // Resetea el conteo si el jugador es demasiado lento
-        StartCoroutine(ResetAttackCombo());
     }
 
     private void PlayBasicAttackFull()
@@ -308,12 +414,11 @@ public class HeroController : MonoBehaviour
         if (anim != null)
         {
             anim.ResetTrigger("Attack");
+            anim.ResetTrigger("AttackQuick");
             anim.SetTrigger("Attack");
         }
 
-        Debug.Log(name + " realiza un ataque completo con un arma");
-
-        // Aplica el daño al objetivo si existe
+        Debug.Log(name + " realiza un ataque COMPLETO con un arma (Automático)");
         AplicarDanoAlObjetivo();
     }
 
@@ -324,12 +429,11 @@ public class HeroController : MonoBehaviour
         if (anim != null)
         {
             anim.ResetTrigger("Attack");
-            anim.SetTrigger("Attack");
+            anim.ResetTrigger("AttackQuick");
+            anim.SetTrigger("AttackQuick");
         }
 
-        Debug.Log(name + " realiza ataque consecutivo fluido con un arma (Combo: " + attackCount + ")");
-
-        // Aplica el daño al objetivo si existe
+        Debug.Log(name + " realiza ataque RÁPIDO automático (Combo: " + attackCount + ")");
         AplicarDanoAlObjetivo();
     }
 
@@ -342,37 +446,24 @@ public class HeroController : MonoBehaviour
         if (anim != null)
         {
             anim.ResetTrigger("Attack");
+            anim.ResetTrigger("AttackQuick");
             anim.ResetTrigger("Burst");
             anim.SetTrigger("Burst");
         }
 
-        Debug.Log(name + " ¡Activó la ráfaga con ambas manos!");
-
-        // Aplica daño inmediato
+        Debug.Log(name + " ¡Activó la RÁFAGA automática con ambas manos!");
         AplicarDanoAlObjetivo();
 
-        // Reinicia el contador y el cooldown para ataques
         isInBurstMode = true;
         attackCount = 0;
         nextAttackTime = Time.time + burstAttackCooldown;
 
-        // Salir de modo ráfaga después de la animación
         StartCoroutine(ResetBurstMode());
-    }
-
-    private IEnumerator ResetAttackCombo()
-    {
-        yield return new WaitForSeconds(1.5f); // Define el tiempo límite para continuar un combo
-        if (attackCount > 0)
-        {
-            attackCount = 0; // Si se supera este tiempo, se reinicia el contador
-            Debug.Log(name + " - Combo reseteado por inactividad");
-        }
     }
 
     private IEnumerator ResetBurstMode()
     {
-        yield return new WaitForSeconds(1.0f); // Ajusta la duración de la ráfaga
+        yield return new WaitForSeconds(1.0f);
         isInBurstMode = false;
         isAttacking = false;
         Debug.Log(name + " - Modo ráfaga terminado");
@@ -402,9 +493,8 @@ public class HeroController : MonoBehaviour
         }
     }
 
-    private void AplicarDanoRaycastSimulado()//debug para simular el ataque básico mientras no tengo los personajes ni las animaciones definitivas, luego se puede reemplazar por la lógica real de d[...]
+    private void AplicarDanoRaycastSimulado()
     {
-       
         RaycastHit hit;
         if (Physics.Raycast(transform.position + Vector3.up * 0.5f, transform.forward, out hit, stats.attackRange))
         {
@@ -450,6 +540,12 @@ public class HeroController : MonoBehaviour
     private void Die()
     {
         isDead = true;
+        autoAttackEnabled = false;
+        if (autoAttackRoutine != null)
+        {
+            StopCoroutine(autoAttackRoutine);
+            autoAttackRoutine = null;
+        }
         if (botAI != null) botAI.DesactivarBot();
         if (agent != null)
         {
@@ -475,8 +571,9 @@ public class HeroController : MonoBehaviour
         isDead = false;
         currentHealth = stats.maxHealth;
         tiempoInactivo = 0f;
-        attackCount = 0; // Resetea el combo al respawnear
+        attackCount = 0;
         isInBurstMode = false;
+        autoAttackEnabled = false;
 
         transform.position = Vector3.zero; 
 
@@ -492,7 +589,7 @@ public class HeroController : MonoBehaviour
         Debug.Log("[RESPAWN] El héroe ha vuelto a la batalla.");
     }
 
-    public void LevelExperience(float cantidad)//Experimental
+    public void LevelExperience(float cantidad)
     {
         if (nivel >= maxLevel) return;
 

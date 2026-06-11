@@ -1,5 +1,11 @@
 namespace AxionHeroes.Gameplay
 {
+    public enum Team
+    {
+        Blue,
+        Red
+    }
+
     public enum HeroRole
     {
         Vanguardista, // Fighter

@@ -3,12 +3,14 @@ using UnityEngine.AI;
 using System.Collections;
 using AxionHeroes.Gameplay;
 
-public class HeroController : MonoBehaviour
+public class HeroController : MonoBehaviour, IDamageable
 {
     private NavMeshAgent agent;//para el movimiento del héroe, aunque también se puede mover con transform.Translate o algo así, pero el NavMeshAgent ya me da la ventaja de poder navegar por el mapa sin preocuparme por obstáculos o cosas así, y también me facilita la implementación de la IA del bot luego.
     
     private Animator anim;
     private HeroBotAI botAI;
+
+    private HeroRecall recallComponent;
 
     [Header("Referencia de Datos")]
     public HeroData stats;//scriptable object con las estadísticas del héroe, como vida, daño, velocidad de movimiento, etc.
@@ -25,6 +27,7 @@ public class HeroController : MonoBehaviour
     public float maxLevel = 25f;
 
     [Header(" Configuración de Rol & IA ")]
+    public Team myTeam;
     public bool esBot = false;
     public float tiempoParaAFK = 10f;
     private float tiempoInactivo = 0f;
@@ -32,6 +35,7 @@ public class HeroController : MonoBehaviour
     [Header("Estado del Héroe ")]
     private float currentHealth;
     private bool isDead = false;
+    public bool isRecalling = false;
 
     [Header("Movimiento")]
     [SerializeField] private VariableJoystick mobileJoystick;
@@ -49,6 +53,7 @@ public class HeroController : MonoBehaviour
     public bool IsAttacking => isAttacking;
     public bool IsDead => isDead;
     public float CurrentHealth => currentHealth;
+    public float MaxHealth => stats.maxHealth; // Implementación de IDamageable
 
 
     [Header("Referencias de Combate")]
@@ -56,13 +61,21 @@ public class HeroController : MonoBehaviour
     public float attackDamage = 50f; // Puedes sacar esto de 'stats' si prefieres
     public float porcentaje = 1.0f; // Multiplicador de daño
     public EvolutionManager myEvolutionManager; // Asumiendo que este es tu sistema de exp
+    [SerializeField] private Transform teamRespawnPoint; // Punto de respawn para el equipo
     public float expParaEvolucionPorTorre = 50f;
+
+    // Caching de hashes para optimización
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int HealthHash = Animator.StringToHash("Health");
+    private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int DieHash = Animator.StringToHash("Die");
 
     void Start()
 {
     agent = GetComponent<NavMeshAgent>();
     anim = GetComponent<Animator>();
     botAI = GetComponent<HeroBotAI>();
+    recallComponent = GetComponent<HeroRecall>();
 
     if (anim == null)
     {
@@ -101,6 +114,16 @@ public class HeroController : MonoBehaviour
 
         InputData input = ObtenerInput();
 
+        // Cancelar Recall si hay movimiento significativo
+        if (isRecalling && input.tieneInput)
+        {
+            isRecalling = false;
+            if (recallComponent != null) recallComponent.CancelRecall();
+        }
+
+        // Siempre resetear el estado de ataque (cooldowns) para que el bot pueda atacar de nuevo
+        ResetearEstadoAtaqueSimulado();
+
         if (esBot)
         {
             if (input.tieneInput)
@@ -110,6 +133,8 @@ public class HeroController : MonoBehaviour
             else
             {
                 HandleBotAnimations();
+                // Actualizar float de vida para animaciones de la IA
+                anim.SetFloat(HealthHash, currentHealth / stats.maxHealth);
                 return;
             }
         }
@@ -117,7 +142,6 @@ public class HeroController : MonoBehaviour
         VerificarInactividadAFK(input);
         HandleMovement(input);
         HandleKeyboardInput();
-        ResetearEstadoAtaqueSimulado();
     }
 
     private struct InputData
@@ -184,7 +208,7 @@ public class HeroController : MonoBehaviour
     {
         esBot = false;
         tiempoInactivo = 0f;
-        if (botAI != null) botAI.DesactivarBot();
+        if (botAI != null && botAI.isActiveAndEnabled) botAI.DesactivarBot(); // Asegurarse de que el botAI esté activo
         if (agent != null && agent.enabled) agent.ResetPath();
     }
 
@@ -192,11 +216,7 @@ public class HeroController : MonoBehaviour
 {
     if (agent == null || !agent.enabled)
         return;
-
-    SetAnimatorFloatSafe(
-        "Speed",
-        agent.velocity.sqrMagnitude > 0.01f ? 1f : 0f
-    );
+    anim.SetFloat(SpeedHash, agent.velocity.sqrMagnitude > 0.01f ? 1f : 0f);
 }
     private void HandleMovement(InputData input)
     {
@@ -209,26 +229,16 @@ public class HeroController : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(movementDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
 
-            if (agent != null && agent.enabled)
-            {
-                agent.velocity = movementDirection * stats.movementSpeed;
-            }
-
-            SetAnimatorFloatSafe("Speed", 1f);
+            if (agent != null && agent.enabled) agent.Move(movementDirection * stats.movementSpeed * Time.deltaTime);
+            anim.SetFloat(SpeedHash, 1f);
         }
         else
         {
-            if (agent != null && agent.enabled)
-            {
-                agent.velocity = Vector3.zero;
-                if (agent.hasPath) agent.ResetPath();
-            }
-
-            SetAnimatorFloatSafe("Speed", 0f);
+            anim.SetFloat(SpeedHash, 0f);
         }
 
         float healthNormalized = currentHealth / stats.maxHealth;
-        SetAnimatorFloatSafe("Health", healthNormalized);
+        anim.SetFloat(HealthHash, healthNormalized);
     }
 
     private void HandleKeyboardInput()
@@ -247,12 +257,6 @@ public class HeroController : MonoBehaviour
         Debug.Log("Muerto");
         return;
     }
-
-    if (Time.time < tiempoSiguienteAtaque)
-    {
-        Debug.Log("En cooldown");
-        return;
-    }
     if (Time.time < tiempoSiguienteAtaque)
         return;
 
@@ -262,8 +266,7 @@ public class HeroController : MonoBehaviour
 
     if (anim != null)
     {
-        anim.ResetTrigger("Attack");
-        anim.SetTrigger("Attack");
+        anim.SetTrigger(AttackHash);
     }
 
     tiempoSiguienteAtaque =
@@ -272,40 +275,17 @@ public class HeroController : MonoBehaviour
     if (currentTarget == null)
         return;
 
-    int danoFinal =
-        Mathf.RoundToInt(
-            attackDamage * porcentaje
-        );
+    float danoFinal = attackDamage * porcentaje;
 
-    if (currentTarget.TryGetComponent(
-        out Shard_Controller enemyShard))
+    if (currentTarget.TryGetComponent(out IDamageable damageable))
     {
-        enemyShard.TakeDamage(danoFinal);
-
-        Debug.Log(
-            "Golpeó shard: " +
-            enemyShard.name
-        );
+        damageable.TakeDamage(danoFinal);
+        Debug.Log($"[{name}] Golpeó a {currentTarget.name} infligiendo {danoFinal} de daño.");
     }
-    else if (currentTarget.TryGetComponent(
-        out Sentinel_Controller enemySentinel))
+    else if (currentTarget.TryGetComponent(out Sentinel_Controller enemySentinel))
     {
+        // Casos especiales como estructuras que quizás no usan la interfaz aún
         enemySentinel.TakeDamage(danoFinal);
-
-        Debug.Log(
-            "Golpeó sentinel: " +
-            enemySentinel.name
-        );
-    }
-    else if (currentTarget.TryGetComponent(
-        out HeroController enemyHero))
-    {
-        enemyHero.TakeDamage(danoFinal);
-
-        Debug.Log(
-            "Golpeó héroe: " +
-            enemyHero.name
-        );
     }
 }    private void AplicarDanoRaycastSimulado()//debug para simular el ataque básico mientras no tengo los personajes ni las animaciones definitivas, luego se puede reemplazar por la lógica real de daño que quiera implementar.
     {
@@ -342,6 +322,21 @@ public class HeroController : MonoBehaviour
     {
         if (isDead) return;
         currentHealth -= damage;
+
+        if (isRecalling)
+        {
+            isRecalling = false;
+            if (recallComponent != null) recallComponent.CancelRecall();
+        }
+
+        currentHealth = Mathf.Clamp(currentHealth, 0, stats.maxHealth);
+
+        if (currentHealth <= 0) Die();
+    }
+
+    public void Heal(float amount)
+    {
+        currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, stats.maxHealth);
 
         if (botAI != null && esBot)
@@ -361,7 +356,7 @@ public class HeroController : MonoBehaviour
             agent.ResetPath();
             agent.enabled = false;
         }
-        if (anim != null) anim.SetTrigger("Die");
+        if (anim != null) anim.SetTrigger(DieHash);
 
         StartCoroutine(RespawnTimer());
     }
@@ -380,8 +375,11 @@ public class HeroController : MonoBehaviour
         isDead = false;
         currentHealth = stats.maxHealth;
         tiempoInactivo = 0f;
-
-        transform.position = Vector3.zero; 
+        
+        if (teamRespawnPoint != null)
+            transform.position = teamRespawnPoint.position;
+        else
+            transform.position = Vector3.zero; // Fallback
 
         if (agent != null) agent.enabled = true;
 

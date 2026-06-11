@@ -27,17 +27,20 @@ public class Caster_Controller : Shard_Controller
 
     IEnumerator LanzarHechizo()
     {
-        yield return new WaitForSeconds(1f);
+        // Esperar un porcentaje del tiempo de ataque para sincronizar con la animación de lanzamiento
+        // Ajusta este valor (ej. 0.3f) para que coincida con el punto de lanzamiento en tu animación
+        yield return new WaitForSeconds((1f / attackSpeed) * 0.3f); 
 
-        if (currentTarget != null && projectilePrefab != null && firePointL != null && firePointR != null)
+        if (currentTarget != null && projectilePrefab != null && firePointL != null && firePointR != null && !IsDead)
         {
             Transform puntoActual = dispararDerecha ? firePointR : firePointL;
 
             Vector3 direccion = (currentTarget.transform.position - puntoActual.position).normalized;
 
             GameObject proj = Instantiate(projectilePrefab, puntoActual.position, Quaternion.identity);
+            Shard_Projectile projectileScript = proj.GetComponent<Shard_Projectile>();
 
-            proj.GetComponent<Shard_Projectile>().SetTarget(currentTarget);
+            if (projectileScript != null) projectileScript.SetTarget(currentTarget, attackDamage); // Pasar el daño del shard
 
 
             proj.transform.rotation = Quaternion.LookRotation(direccion);

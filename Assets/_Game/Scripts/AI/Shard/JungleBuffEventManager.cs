@@ -17,12 +17,26 @@ public class JungleBuffEventManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            
+            ConfigurarColisionesAliadas();
         }
         else
         {
             Destroy(gameObject);
         }
+    }
+
+    private void ConfigurarColisionesAliadas()
+    {
+        int blueLayer = LayerMask.NameToLayer("BlueTeam");
+        int redLayer = LayerMask.NameToLayer("RedTeam");
+
+        if (blueLayer != -1) 
+            Physics.IgnoreLayerCollision(blueLayer, blueLayer, true);
+        
+        if (redLayer != -1) 
+            Physics.IgnoreLayerCollision(redLayer, redLayer, true);
+            
+        Debug.Log("<color=green>[Physics]</color> Colisiones entre aliados desactivadas.");
     }
 
     public void IniciarEventoBuff(string nombreEquipo)

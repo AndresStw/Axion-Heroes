@@ -667,35 +667,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 2497666077858996223}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e48b63df61ec02647aab53d8f21a31c1, type: 3}
+  m_Script: {fileID: 11500000, guid: 4bad2cb74226ee64cad14c11592b056c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Shard_Controller
   myTeam: 0
-  enemyTag: RedTeam
-  miBarraDeVida: {fileID: 2158471254661137201}
-  waypoints:
-  - {x: -5.8056724e+36, y: 8.13e-43, z: -1.0203513e-18}
-  - {x: 8.11e-43, y: -5.805693e+36, z: 8.13e-43}
-  - {x: -1.0203513e-18, y: 8.11e-43, z: -5.805713e+36}
-  - {x: 8.13e-43, y: -1.0203513e-18, z: 8.11e-43}
-  - {x: -5.805733e+36, y: 8.13e-43, z: -1.0203513e-18}
-  - {x: 8.11e-43, y: -5.8057535e+36, z: 8.13e-43}
-  - {x: -1.0203513e-18, y: 8.11e-43, z: -5.805774e+36}
-  - {x: 8.13e-43, y: -1.0203513e-18, z: 8.11e-43}
-  - {x: 3.026022e+20, y: 8.09e-43, z: -6.1839195e-19}
-  - {x: 8.11e-43, y: 3.0260333e+20, z: 8.09e-43}
-  - {x: -6.1839195e-19, y: 8.11e-43, z: 3.0260446e+20}
-  - {x: 8.09e-43, y: -6.1839195e-19, z: 8.11e-43}
-  - {x: 3.026056e+20, y: 8.09e-43, z: -6.1839195e-19}
-  detectionRange: 10
+  enemyTag: 
+  evolutionManager: {fileID: 0}
+  healthBar: {fileID: 0}
+  levelTextUI: {fileID: 0}
+  waypoints: []
+  detectionRange: 12
+  leashRange: 8
   waypointThreshold: 1.5
-  maxHealth: 550
-  health: 550
-  attackDamage: 12
-  attackRange: 5
+  baseMaxHealth: 50
+  baseAttackDamage: 10
+  maxHealth: 0
+  health: 0
+  attackDamage: 0
+  attackRange: 3
   attackSpeed: 1
-  rutaPadre: {fileID: 0}
-  invertirRuta: 0
+  pathParent: {fileID: 0}
+  reversePath: 0
+  expGrantedToEnemyHero: 35
+  expForTowerEvolution: 100
+  expForHeroEvolution: 150
 --- !u!136 &5480682178054203126
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1712,17 +1707,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 8101804894170806447}
   m_SourcePrefab: {fileID: 100100000, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}
---- !u!114 &2158471254661137201 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3670618792222041698, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}
-  m_PrefabInstance: {fileID: 3388051019190281555}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
 --- !u!224 &7122824688755915961 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5610813486252759530, guid: b2f8136e3117b544ca48e0015fa86cc5, type: 3}

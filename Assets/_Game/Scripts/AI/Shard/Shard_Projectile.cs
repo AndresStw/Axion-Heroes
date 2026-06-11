@@ -1,16 +1,18 @@
 using UnityEngine;
+using AxionHeroes.Gameplay;
 
 public class Shard_Projectile : MonoBehaviour
 {
     public float speed = 10f;
-    public int damage = 20;
+    public float damage = 20f;
     public float lifetime = 3f;
 
     private GameObject target;
 
-    public void SetTarget(GameObject t)
+    public void SetTarget(GameObject t, float projectileDamage)
     {
         target = t;
+        damage = projectileDamage; // Asignar el daño del shard que lo lanza
     }
 
     void Start()
@@ -45,18 +47,11 @@ public class Shard_Projectile : MonoBehaviour
     void Impacto()
     {
         if (target == null) return;
-
-       
-        if (target.TryGetComponent(out Shard_Controller enemyShard))
+        
+        if (target.TryGetComponent(out IDamageable damageable))
         {
-            enemyShard.TakeDamage(damage);
+            damageable.TakeDamage(damage);
         }
-       
-        else if (target.TryGetComponent(out Sentinel_Controller enemySentinel))
-        {
-            enemySentinel.TakeDamage(damage);
-        }
-
         Destroy(gameObject);
     }
 }

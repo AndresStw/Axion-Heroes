@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
+using AxionHeroes.Gameplay;
 
-public class Dragon_Blue : MonoBehaviour // hijo de jungleBuffEventManager recordar que toca crear un script para el mini dragon azul,
+public class Dragon_Blue : MonoBehaviour, IDamageable // hijo de jungleBuffEventManager recordar que toca crear un script para el mini dragon azul,
                                          // que herede de este script, para que tenga las mismas funciones pero con diferentes stats.
 {
     [SerializeField] protected Transform spawnPoint;
@@ -67,6 +68,9 @@ public class Dragon_Blue : MonoBehaviour // hijo de jungleBuffEventManager recor
 
     [Header("otras")]
     [SerializeField] protected bool isDead = false;
+    public bool IsDead => isDead;
+    public float MaxHealth => maxHealth; // Implementación de IDamageable
+    public float CurrentHealth => health;
 
     [Header("Attack Variations_Prueba")]
     protected int attackVariation = 0;
@@ -323,10 +327,13 @@ public class Dragon_Blue : MonoBehaviour // hijo de jungleBuffEventManager recor
             state = DragonState.Leashing;
         }
     }
+    // Implementación explícita de la interfaz IDamageable
+    public void TakeDamage(float amount) {
+        TakeDamage(amount, null); // Llama a la sobrecarga con attacker nulo
+    }
 
     // parámetro opcional 'attacker' para saber quién inició la pelea
-    public virtual void TakeDamage(float damageAmount, Transform attacker = null)
-    {
+public virtual void TakeDamage(float damageAmount, Transform attacker = null)    {
         if (isDead)
             return;
 

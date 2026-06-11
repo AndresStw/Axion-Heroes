@@ -3,11 +3,10 @@ using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
+using AxionHeroes.Gameplay;
 
-public class Shard_Controller : MonoBehaviour
+public class Shard_Controller : MonoBehaviour, IDamageable
 {
-    public enum Team { Blue, Red }
-
     [Header("Configuración de Grupo")]
     public Team myTeam;
     public string enemyTag;
@@ -27,19 +26,32 @@ public class Shard_Controller : MonoBehaviour
     [Header("Stats Base (Nivel 1)")]
     public int baseMaxHealth = 50;
     public int baseAttackDamage = 10;
-    
-    [HideInInspector] public int maxHealth;
-    [HideInInspector] public int health;
-    [HideInInspector] public int attackDamage;
-    
+
+    [HideInInspector] public float maxHealth;
+    [HideInInspector] public float currentHealthValue;
+    [HideInInspector] public float attackDamage;
+
     public float attackRange = 3f;
     public float attackSpeed = 1.0f;
     private float attackTimer;
 
+    private float scanTimer;
+    private const float SCAN_INTERVAL = 0.2f; // Intervalo de escaneo para buscar enemigos
+    private Collider[] scanBuffer = new Collider[10]; // Buffer para OverlapSphereNonAlloc
+
     protected NavMeshAgent agent; 
     protected Animator anim;
     protected GameObject currentTarget;
+
+    public GameObject Target => currentTarget;
+    public void SetTarget(GameObject target) => currentTarget = target;
+
+    private bool hasAttackParam, hasAttack2Param;
+
     private bool isDead = false;
+    public float MaxHealth => maxHealth; // Implementación de IDamageable
+    public bool IsDead => isDead;
+    public float CurrentHealth => currentHealthValue;
 
     [Header("Configuración de Ruta")]
     public GameObject rutaPadre;
@@ -52,6 +64,9 @@ public class Shard_Controller : MonoBehaviour
 
     protected virtual void Start()
     {
+        agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
+
         // ESCALADO GLOBAL: Ajustar estadísticas según la evolución del grupo 
         if (myEvolutionManager != null)
         {
@@ -64,23 +79,14 @@ public class Shard_Controller : MonoBehaviour
             attackDamage = baseAttackDamage;
         }
 
-        health = maxHealth;
-
-        if (miBarraDeVida != null)
-        {
-            miBarraDeVida.maxValue = maxHealth;
-            miBarraDeVida.value = health;
-        }
+        currentHealthValue = maxHealth;
 
         ActualizarVidaUI();
-        agent = GetComponent<NavMeshAgent>();
-        anim = GetComponent<Animator>();
 
         if (anim != null)
         {
-            anim.ResetTrigger("Die");
-            if (HasParameter("Attack", anim)) anim.ResetTrigger("Attack");
-            if (HasParameter("Attack_2", anim)) anim.ResetTrigger("Attack_2");
+            hasAttackParam = HasParameter("Attack", anim);
+            hasAttack2Param = HasParameter("Attack_2", anim);
         }
 
         if ((waypoints == null || waypoints.Count == 0) && rutaPadre != null)
@@ -100,7 +106,12 @@ public class Shard_Controller : MonoBehaviour
     {
         if (isDead) return;
 
-        FindEnemy();
+        scanTimer -= Time.deltaTime;
+        if (scanTimer <= 0)
+        {
+            FindEnemy();
+            scanTimer = SCAN_INTERVAL;
+        }
 
         if (anim != null) anim.SetFloat("Speed", agent.velocity.sqrMagnitude);
 
@@ -128,8 +139,8 @@ public class Shard_Controller : MonoBehaviour
 
         agent.isStopped = false;
 
-        if (HasParameter("Attack", anim)) anim.ResetTrigger("Attack");
-        if (HasParameter("Attack_2", anim)) anim.ResetTrigger("Attack_2");
+        if (hasAttackParam) anim.ResetTrigger("Attack");
+        if (hasAttack2Param) anim.ResetTrigger("Attack_2");
 
         if (!agent.pathPending && agent.remainingDistance <= waypointThreshold)
         {
@@ -162,13 +173,14 @@ public class Shard_Controller : MonoBehaviour
             }
         }
 
-        Collider[] hits = Physics.OverlapSphere(transform.position, detectionRange);
+        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, detectionRange, scanBuffer);
         GameObject bestTarget = null;
         float closestDistance = Mathf.Infinity;
         int highestPriority = -1; 
 
-        foreach (Collider hit in hits)
+        for (int i = 0; i < hitCount; i++)
         {
+            Collider hit = scanBuffer[i];
             if (hit.CompareTag(enemyTag))
             {
                 float distance = Vector3.Distance(transform.position, hit.transform.position);
@@ -222,7 +234,7 @@ public class Shard_Controller : MonoBehaviour
                 else agent.SetDestination(currentTarget.transform.position);
             }
             attackTimer = 0f;
-        }
+        } // Si está fuera de rango, no debería atacar, resetear timer
         else
         {
             if (agent.isActiveAndEnabled && !agent.isStopped)
@@ -239,18 +251,14 @@ public class Shard_Controller : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 25f);
             }
 
-            if (attackTimer == 0f)
+            if (attackTimer <= 0f) // Si el timer es 0 o negativo, podemos atacar
             {
                 ExecuteAttack();
-                attackTimer = 0.001f;
+                attackTimer = 1.0f / attackSpeed; // Reiniciar el timer con el cooldown basado en attackSpeed
             }
-
-            attackTimer += Time.deltaTime * attackSpeed;
-
-            if (attackTimer >= 1.0f)
+            else
             {
-                ExecuteAttack();
-                attackTimer = 0.001f;
+                attackTimer -= Time.deltaTime; // Decrementar el timer
             }
         }
     }
@@ -260,18 +268,19 @@ public class Shard_Controller : MonoBehaviour
 
     protected virtual void ExecuteAttack()
     {
-        if (anim == null) return;
+        if (anim == null) return; // Asegurarse de que el animador existe
 
-        if (HasParameter("Attack_2", anim))
+        if (hasAttack2Param)
         {
             anim.SetTrigger("Attack_2");
             StartCoroutine(SecuenciaDeDanoDoble());
         }
-        else
+        else if (hasAttackParam) // Usar Attack si Attack_2 no está disponible
         {
             anim.SetTrigger("Attack");
             StartCoroutine(SecuenciaDeDanoSimple());
         }
+        // Si no tiene ninguna animación de ataque, no hacer nada o loggear una advertencia
     }
 
     IEnumerator SecuenciaDeDanoDoble()
@@ -291,45 +300,44 @@ public class Shard_Controller : MonoBehaviour
     void AplicarDanoProporcional(float porcentaje)
     {
         if (isDead || currentTarget == null) return;
-        int danoFinal = Mathf.RoundToInt(attackDamage * porcentaje);
+        float danoFinal = attackDamage * porcentaje;
 
-        if (currentTarget.TryGetComponent(out Shard_Controller enemyShard))
+        if (currentTarget.TryGetComponent(out IDamageable targetDamageable)) // Usar IDamageable para estructuras también
         {
-            enemyShard.TakeDamage(danoFinal);
-        }
-        else if (currentTarget.TryGetComponent(out Sentinel_Controller enemySentinel))
-        {
-            // Si el golpe destruye la torre enemiga, sumamos experiencia evolutiva a toda nuestra facción
-            if (enemySentinel.health <= danoFinal && myEvolutionManager != null)
+            // Si el golpe destruye una torre enemiga (asumiendo que Sentinel_Controller implementa IDamageable)
+            if (targetDamageable is Sentinel_Controller enemySentinel && enemySentinel.CurrentHealth <= danoFinal && myEvolutionManager != null)
             {
                 myEvolutionManager.AddExperience(expParaEvolucionPorTorre);
             }
-            enemySentinel.TakeDamage(danoFinal);
+            targetDamageable.TakeDamage(danoFinal);
         }
-        else if (currentTarget.TryGetComponent(out HeroController enemyHero))
-        {
-           
-            if (enemyHero.AttackRange > 0) // Validación rápida de existencia de la referencia del héroe
-            {
-                // Asumiendo que añado un campo de vida pública o  vía método en HeroController
-                // Si matamos al héroe enemigo:
-                // if(heroeMuere) myEvolutionManager.AddExperience(expParaEvolucionPorHeroe);
-            }
-            enemyHero.TakeDamage(danoFinal);
-        }
+        // else if (currentTarget.TryGetComponent(out Sentinel_Controller enemySentinel)) // Esto ya no sería necesario si Sentinel_Controller implementa IDamageable
+        // {
+        //     // Si el golpe destruye la torre enemiga, sumamos experiencia evolutiva a toda nuestra facción
+        //     if (enemySentinel.health <= danoFinal && myEvolutionManager != null)
+        //     {
+        //         myEvolutionManager.AddExperience(expParaEvolucionPorTorre);
+        //     }
+        //     enemySentinel.TakeDamage(danoFinal);
+        // }
     }
 
-    public void TakeDamage(int damageAmount)
+    public void TakeDamage(float damageAmount)
     {
         if (isDead) return;
-        health -= damageAmount;
+        currentHealthValue -= damageAmount;
         ActualizarVidaUI();
-        if (health <= 0) Die();
+        if (currentHealthValue <= 0) Die();
     }
 
     public void ActualizarVidaUI()
     {
-        if (miBarraDeVida != null) miBarraDeVida.value = health;
+        if (miBarraDeVida != null)
+        {
+            miBarraDeVida.maxValue = maxHealth;
+            miBarraDeVida.value = currentHealthValue;
+        }
+
         if (textNivelUI != null && myEvolutionManager != null) 
         {
             textNivelUI.text = "Nv. " + myEvolutionManager.currentLevel;
@@ -349,8 +357,8 @@ public class Shard_Controller : MonoBehaviour
         if (anim != null)
         {
             anim.SetTrigger("Die");
-            if (HasParameter("Attack", anim)) anim.ResetTrigger("Attack");
-            if (HasParameter("Attack_2", anim)) anim.ResetTrigger("Attack_2");
+            if (hasAttackParam) anim.ResetTrigger("Attack");
+            if (hasAttack2Param) anim.ResetTrigger("Attack_2");
         }
 
         if (GetComponent<Collider>()) GetComponent<Collider>().enabled = false;
@@ -368,10 +376,10 @@ public class Shard_Controller : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(transform.position, detectionRange);
         foreach (Collider col in colliders)
         {
-            if (col.TryGetComponent(out HeroController hero))
+            if (col.TryGetComponent(out IDamageable damageable) && col.CompareTag(enemyTag))
             {
-                // Validación para asegurar que solo le de experiencia al héroe que es del bando contrario
-                if (col.CompareTag(enemyTag))
+                // Si es un HeroController, le damos experiencia
+                if (damageable is HeroController hero)
                 {
                     hero.LevelExperience(expOtorgadaAlHeroeEnemigo);
                     Debug.Log($"[EXP] Otorgada {expOtorgadaAlHeroeEnemigo} de experiencia al héroe: {col.name}");

@@ -1,22 +1,22 @@
 using UnityEngine;
+using AxionHeroes.Gameplay;
 
-public class Sentinel_Controller : MonoBehaviour
+public class Sentinel_Controller : MonoBehaviour, IDamageable
 {
-    public enum Team
-    {
-        Blue,
-        Red
-    }
-
     [Header("Team")]
     public Team myTeam;
     public string enemyTag;
 
     [Header("Stats")]
-    public int health = 500;
+    public float health = 500f; // Cambiado a float
     public float attackRange = 10f;
     public float attackCooldown = 1.5f;
-    public int damage = 20;
+    public float damage = 20f; // Cambiado a float
+
+    // Implementación de IDamageable
+    public bool IsDead => health <= 0;
+    public float CurrentHealth => health;
+    public float MaxHealth => initialHealth;
 
     [Header("Visual")]
     public GameObject projectilePrefab;
@@ -28,9 +28,11 @@ public class Sentinel_Controller : MonoBehaviour
 
     private float nextScanTime;
     private const float scanInterval = 0.25f;
+    private float initialHealth;
 
     private void Awake()
 {
+    initialHealth = health;
     enemyTag =
         myTeam == Team.Blue
         ? "RedTeam"
@@ -161,50 +163,23 @@ else if (hit.GetComponentInParent<Sentinel_Controller>())
         if (currentTarget == null)
             return;
 
-        if (
-            currentTarget.TryGetComponent(
-                out HeroController hero
-            )
-        )
+        // Simplificamos la lógica usando la interfaz IDamageable
+        if (currentTarget.TryGetComponent(out IDamageable damageableTarget))
         {
-            if (!hero.IsDead)
-            {
-                hero.TakeDamage(damage);
-            }
-
-            return;
-        }
-
-        if (
-            currentTarget.TryGetComponent(
-                out Shard_Controller shard
-            )
-        )
-        {
-            shard.TakeDamage(damage);
-            return;
-        }
-
-        if (
-            currentTarget.TryGetComponent(
-                out Sentinel_Controller sentinel
-            )
-        )
-        {
-            sentinel.TakeDamage(damage);
+            damageableTarget.TakeDamage(damage);
         }
     }
 
-    public void TakeDamage(int damageAmount)
+    public void TakeDamage(float damageAmount) // Cambiado a float
     {
         health -= damageAmount;
 
         if (health <= 0)
         {
+            health = 0; // Aseguramos que la salud no baje de 0
             Die();
         }
     }
-
     private void Die()
     {
         Debug.Log(

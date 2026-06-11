@@ -64,56 +64,37 @@ public class ShardJunglePathfinder : MonoBehaviour
 
         if (baseController != null)
         {
-            System.Reflection.FieldInfo targetField = typeof(Shard_Controller).GetField("currentTarget",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+            GameObject targetActual = baseController.Target;
+            bool esObjetivoValido = false;
 
-            if (targetField != null)
+            if (targetActual != null)
             {
-                GameObject targetActual = (GameObject)targetField.GetValue(baseController);
-
-                if (targetActual != null)
+                if (targetActual.name.Contains("Sentinel") || targetActual.name.Contains("Core") || targetActual.name.Contains("Torre"))
                 {
-                    bool esObjetivoValido = false;
-
-                    if (targetActual.name.Contains("Sentinel") || targetActual.name.Contains("Core") || targetActual.name.Contains("Torre"))
-                    {
-                        esObjetivoValido = true;
-                        if (enAsaltoFinal) objetivoEstructuraFinal = targetActual;
-                    }
-                    else if (!enAsaltoFinal && seDistraeConJugadores && targetActual.CompareTag(tagJugadorEnemigo))
-                    {
-                        esObjetivoValido = true;
-                        agent.stoppingDistance = baseController.attackRange;
-                    }
-
-                    if (!esObjetivoValido)
-                    {
-                        if (enAsaltoFinal)
-                        {
-                            if (objetivoEstructuraFinal == null)
-                            {
-                                ForzarBusquedaDeEstructuraFinal();
-                            }
-
-                            targetField.SetValue(baseController, objetivoEstructuraFinal);
-                        }
-                        else
-                        {
-                            targetField.SetValue(baseController, null);
-                        }
-
-                        agent.stoppingDistance = enAsaltoFinal ? baseController.attackRange : 0f;
-                    }
+                    esObjetivoValido = true;
+                    if (enAsaltoFinal) objetivoEstructuraFinal = targetActual;
                 }
-                else if (enAsaltoFinal)
+                else if (!enAsaltoFinal && seDistraeConJugadores && targetActual.CompareTag(tagJugadorEnemigo))
                 {
-                    if (objetivoEstructuraFinal == null)
-                    {
-                        ForzarBusquedaDeEstructuraFinal();
-                    }
-
-                    targetField.SetValue(baseController, objetivoEstructuraFinal);
+                    esObjetivoValido = true;
+                    agent.stoppingDistance = baseController.attackRange;
                 }
+
+                if (!esObjetivoValido)
+                {
+                    if (enAsaltoFinal)
+                    {
+                        if (objetivoEstructuraFinal == null) ForzarBusquedaDeEstructuraFinal();
+                        baseController.SetTarget(objetivoEstructuraFinal);
+                    }
+                    else baseController.SetTarget(null);
+                    agent.stoppingDistance = enAsaltoFinal ? baseController.attackRange : 0f;
+                }
+            }
+            else if (enAsaltoFinal)
+            {
+                if (objetivoEstructuraFinal == null) ForzarBusquedaDeEstructuraFinal();
+                baseController.SetTarget(objetivoEstructuraFinal);
             }
         }
 
@@ -148,7 +129,7 @@ public class ShardJunglePathfinder : MonoBehaviour
         }
     }
 
-    private float waypointThresholdOpcional()
+    protected  virtual float waypointThresholdOpcional()
     {
         return baseController != null ? baseController.waypointThreshold : 1.5f;
     }

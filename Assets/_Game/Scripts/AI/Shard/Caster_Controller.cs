@@ -28,7 +28,6 @@ public class Caster_Controller : Shard_Controller
     IEnumerator LanzarHechizo()
     {
         // Esperar un porcentaje del tiempo de ataque para sincronizar con la animación de lanzamiento
-        // Ajusta este valor (ej. 0.3f) para que coincida con el punto de lanzamiento en tu animación
         yield return new WaitForSeconds((1f / attackSpeed) * 0.3f); 
 
         if (currentTarget != null && projectilePrefab != null && firePointL != null && firePointR != null && !IsDead)

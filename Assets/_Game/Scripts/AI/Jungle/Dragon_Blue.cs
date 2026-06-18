@@ -3,6 +3,10 @@ using UnityEngine.AI;
 using System.Collections;
 using AxionHeroes.Gameplay;
 
+
+
+//tener muy en cuenta , agregar la zona limite para que el jugador sepa hasta donde llega el monstruo pero que la zona se haga visible cuando el heroe entra y pasa 1 seg en el area , si sale se desaparece el area de rango 
+
 public class Dragon_Blue : MonoBehaviour, IDamageable // hijo de jungleBuffEventManager recordar que toca crear un script para el mini dragon azul,
                                          // que herede de este script, para que tenga las mismas funciones pero con diferentes stats.
 {
@@ -127,7 +131,7 @@ public class Dragon_Blue : MonoBehaviour, IDamageable // hijo de jungleBuffEvent
                 break;
         }
 
-        //Nunca colocar un Debug.Log dentro de update, porque se va a spamear el log
+        //Nunca colocar un Debug.Log dentro de update, porque se va a spamear el log ya me paso 
     }
 
     protected virtual IEnumerator SpawnDragon()

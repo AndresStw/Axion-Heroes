@@ -330,6 +330,11 @@ public class Shard_Controller : MonoBehaviour, IDamageable
         if (currentHealthValue <= 0) Die();
     }
 
+    public float GetHealth()
+    {
+        return currentHealthValue;
+    }
+
     public void ActualizarVidaUI()
     {
         if (miBarraDeVida != null)

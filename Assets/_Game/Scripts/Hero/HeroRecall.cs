@@ -11,7 +11,8 @@ public class HeroRecall : MonoBehaviour
     void Start()
     {
         controller = GetComponent<HeroController>();
-        // Asumimos que el punto de spawn inicial es la base
+
+        // punto de spawn inicial base
         spawnPoint = transform.position; 
     }
 

@@ -3,9 +3,10 @@ using UnityEngine.AI;
 using System.Collections;
 using AxionHeroes.Gameplay;
 
+// tengo que analizar si dejar todo en ingles o español, por ahora como estoy solo se queda en dos versiones Es-In , por comodidad 
 public class HeroController : MonoBehaviour, IDamageable
 {
-    private NavMeshAgent agent;//para el movimiento del héroe, aunque también se puede mover con transform.Translate o algo así, pero el NavMeshAgent ya me da la ventaja de poder navegar por el mapa sin preocuparme por obstáculos o cosas así, y también me facilita la implementación de la IA del bot luego.
+    private NavMeshAgent agent;// verificar si lo puedo actualizar a algo mejor  leer unityDocuentacion
     
     private Animator anim;
     private HeroBotAI botAI;
@@ -13,7 +14,7 @@ public class HeroController : MonoBehaviour, IDamageable
     private HeroRecall recallComponent;
 
     [Header("Referencia de Datos")]
-    public HeroData stats;//scriptable object con las estadísticas del héroe, como vida, daño, velocidad de movimiento, etc.
+    public HeroData stats;
 
     [Header("Respawn Config")]
     [SerializeField] private float baseRespawnTime = 6f;
@@ -27,7 +28,7 @@ public class HeroController : MonoBehaviour, IDamageable
     public float maxLevel = 25f;
 
     [Header(" Configuración de Rol & IA ")]
-    public Team myTeam;
+    public Team myTeam;//en otros script esta como mieEquipo,hacer una validacion y dejarla en un solo idioma
     public bool esBot = false;
     public float tiempoParaAFK = 10f;
     private float tiempoInactivo = 0f;
@@ -40,9 +41,19 @@ public class HeroController : MonoBehaviour, IDamageable
     [Header("Movimiento")]
     [SerializeField] private VariableJoystick mobileJoystick;
 
-    [Header(" Sistema de Combate (Simulado mientras tengo los personajes )")]
-    private float tiempoSiguienteAtaque = 0f;
+    [Header(" Sistema de Combate - Ataques Automáticos ")]
+    [SerializeField] private float normalAttackCooldown = 1.0f;
+    [SerializeField] private float quickAttackCooldown = 0.5f;
+    [SerializeField] private float burstAttackCooldown = 3.0f;
+    [SerializeField] private int attacksBeforeBurst = 5;
+    [SerializeField] private float detectionRange = 15f; 
+    [SerializeField] private bool autoAttackEnabled = false; 
+    
+    private int attackCount = 0;
+    private bool isInBurstMode = false;
+    private float nextAttackTime = 0f;
     private bool isAttacking = false;
+    private Coroutine autoAttackRoutine;
 
     [Header(" Habilidades & Ulti ")]
     private float nextSkillTime = 0f;
@@ -53,76 +64,87 @@ public class HeroController : MonoBehaviour, IDamageable
     public bool IsAttacking => isAttacking;
     public bool IsDead => isDead;
     public float CurrentHealth => currentHealth;
-    public float MaxHealth => stats.maxHealth; // Implementación de IDamageable
-
+    public float MaxHealth => stats.maxHealth; 
 
     [Header("Referencias de Combate")]
-    public Transform currentTarget; // El enemigo al que el bot/héroe apunta
-    public float attackDamage = 50f; // Puedes sacar esto de 'stats' si prefieres
-    public float porcentaje = 1.0f; // Multiplicador de daño
-    public EvolutionManager myEvolutionManager; // Asumiendo que este es tu sistema de exp
-    [SerializeField] private Transform teamRespawnPoint; // Punto de respawn para el equipo
+    public Transform currentTarget; 
+    public float attackDamage = 50f; 
+    public float porcentaje = 1.0f;
+    public EvolutionManager myEvolutionManager; 
+    [SerializeField] private Transform teamRespawnPoint; 
     public float expParaEvolucionPorTorre = 50f;
 
-    // Caching de hashes para optimización
+   
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int HealthHash = Animator.StringToHash("Health");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
     private static readonly int DieHash = Animator.StringToHash("Die");
 
     void Start()
-{
-    agent = GetComponent<NavMeshAgent>();
-    anim = GetComponent<Animator>();
-    botAI = GetComponent<HeroBotAI>();
-    recallComponent = GetComponent<HeroRecall>();
+    {
+        agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
+        botAI = GetComponent<HeroBotAI>();
+        recallComponent = GetComponent<HeroRecall>();
 
-    if (anim == null)
-    {
-        Debug.LogError(
-            $"[{name}] Animator no encontrado."
-        );
-    }
-    else
-    {
-        if (!HasParameter("Attack"))
+        if (anim == null)
         {
-            Debug.LogWarning(
-                $"[{name}] No existe Trigger Attack."
-            );
+            Debug.LogError($"[{name}] Animator no encontrado.");
+        }
+        else
+        {
+            if (!HasParameter("Attack"))
+            {
+                Debug.LogWarning($"[{name}] No existe Trigger Attack.");
+            }
+            if (!HasParameter("AttackQuick"))
+            {
+                Debug.LogWarning($"[{name}] No existe Trigger AttackQuick.");
+            }
+            if (!HasParameter("Burst"))
+            {
+                Debug.LogWarning($"[{name}] No existe Trigger Burst para la ráfaga.");
+            }
+        }
+
+        currentHealth = stats.maxHealth;
+
+        if (agent != null)
+        {
+            agent.acceleration = 30f;
+            agent.angularSpeed = 1000f;
+            agent.speed = stats.movementSpeed;
+            agent.stoppingDistance = 0.1f;
+        }
+
+        if (esBot)
+        {
+            ActivarIA();
         }
     }
 
-    currentHealth = stats.maxHealth;
-
-    if (agent != null)
-    {
-        agent.acceleration = 30f;
-        agent.angularSpeed = 1000f;
-        agent.speed = stats.movementSpeed;
-        agent.stoppingDistance = 0.1f;
-    }
-
-    if (esBot)
-    {
-        ActivarIA();
-    }
-}
     void Update()
     {
         if (isDead) return;
 
         InputData input = ObtenerInput();
 
-        // Cancelar Recall si hay movimiento significativo
-        if (isRecalling && input.tieneInput)
-        {
-            isRecalling = false;
-            if (recallComponent != null) recallComponent.CancelRecall();
-        }
-
-        // Siempre resetear el estado de ataque (cooldowns) para que el bot pueda atacar de nuevo
+        // Resetear el estado de ataque si el cooldown ya pasó
         ResetearEstadoAtaqueSimulado();
+
+        if (input.tieneInput)
+        {
+            // Cancelar Recall si hay movimiento manual
+            if (isRecalling)
+            {
+                isRecalling = false;
+                if (recallComponent != null) recallComponent.CancelRecall();
+            }
+
+            // El movimiento manual interrumpe el desplazamiento del auto-ataque pero no lo apaga
+            if (autoAttackEnabled && agent != null && agent.enabled && agent.hasPath)
+                agent.ResetPath();
+        }
 
         if (esBot)
         {
@@ -142,6 +164,12 @@ public class HeroController : MonoBehaviour, IDamageable
         VerificarInactividadAFK(input);
         HandleMovement(input);
         HandleKeyboardInput();
+        
+        // Busca automáticamente enemigos si el ataque automático está habilitado
+        if (autoAttackEnabled)
+        {
+            BuscarEnemigoCercano();
+        }
     }
 
     private struct InputData
@@ -151,7 +179,7 @@ public class HeroController : MonoBehaviour, IDamageable
         public bool tieneInput;
     }
 
-    private InputData ObtenerInput()//joystick
+    private InputData ObtenerInput()
     {
         InputData data = new InputData();
         data.h = Input.GetAxisRaw("Horizontal");
@@ -168,34 +196,35 @@ public class HeroController : MonoBehaviour, IDamageable
     }
 
     private void VerificarInactividadAFK(InputData input)
-{
-    if (!input.tieneInput)
     {
-        tiempoInactivo += Time.deltaTime;
-
-        if (tiempoInactivo >= tiempoParaAFK)
+        if (!input.tieneInput)
         {
-            esBot = true;
-            ActivarIA();
+            tiempoInactivo += Time.deltaTime;
+
+            if (tiempoInactivo >= tiempoParaAFK)
+            {
+                esBot = true;
+                ActivarIA();
+            }
+        }
+        else
+        {
+            tiempoInactivo = 0f;//obviamente este tiempo aumentarlo 1min o 30seg dependiendo
         }
     }
-    else
-    {
-        tiempoInactivo = 0f;
-    }
-}
+
     private bool HasParameter(string paramName)
-{
-    if (anim == null) return false;
-
-    foreach (AnimatorControllerParameter param in anim.parameters)
     {
-        if (param.name == paramName)
-            return true;
-    }
+        if (anim == null) return false;
 
-    return false;
-}
+        foreach (AnimatorControllerParameter param in anim.parameters)
+        {
+            if (param.name == paramName)
+                return true;
+        }
+
+        return false;
+    }
 
     private void ActivarIA()
     {
@@ -213,11 +242,14 @@ public class HeroController : MonoBehaviour, IDamageable
     }
 
     private void HandleBotAnimations()
-{
-    if (agent == null || !agent.enabled)
-        return;
-    anim.SetFloat(SpeedHash, agent.velocity.sqrMagnitude > 0.01f ? 1f : 0f);
-}
+    {
+        if (agent == null || !agent.enabled)
+            return;
+
+        float speed = agent.velocity.sqrMagnitude > 0.01f ? 1f : 0f;
+        anim.SetFloat(SpeedHash, speed);
+    }
+
     private void HandleMovement(InputData input)
     {
         if (isAttacking) return;
@@ -226,6 +258,9 @@ public class HeroController : MonoBehaviour, IDamageable
 
         if (movementDirection.magnitude >= 0.1f)
         {
+            // Corregir , la anim si ataca no se mueve , deberia ser si ataco ir me moviendo pero mas lento , o no se
+            if (isAttacking) return;
+
             Quaternion targetRotation = Quaternion.LookRotation(movementDirection);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
 
@@ -243,53 +278,248 @@ public class HeroController : MonoBehaviour, IDamageable
 
     private void HandleKeyboardInput()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) ExecuteAttackBasic();
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            // Alternarnador de ataques
+            ToggleAutoAttack();
+        }
         if (Input.GetKeyDown(KeyCode.Q) && Time.time >= nextSkillTime) ExecuteSkill();
         if (Input.GetKeyDown(KeyCode.R) && Time.time >= nextUltiTime) ExecuteUltimate();
     }
 
-   public void ExecuteAttackBasic()
-{
-    Debug.Log(name + " -> ExecuteAttackBasic llamado");
-
-    if (isDead)
+    /// <summary>
+    /// Alterna el ataque automático ON/OFF
+    /// </summary>
+    public void ToggleAutoAttack()
     {
-        Debug.Log("Muerto");
-        return;
+        if (isDead) return;
+
+        autoAttackEnabled = !autoAttackEnabled;
+
+        if (autoAttackEnabled)
+        {
+            Debug.Log(name + " - ATAQUE AUTOMÁTICO ACTIVADO");
+            BuscarEnemigoCercano();
+            if (autoAttackRoutine != null)
+                StopCoroutine(autoAttackRoutine);
+            autoAttackRoutine = StartCoroutine(AutoAttackRoutine());
+        }
+        else
+        {
+            Debug.Log(name + " - ATAQUE AUTOMÁTICO DESACTIVADO");
+            if (autoAttackRoutine != null)
+            {
+                StopCoroutine(autoAttackRoutine);
+                autoAttackRoutine = null;
+            }
+            currentTarget = null;
+            attackCount = 0;
+        }
     }
-    if (Time.time < tiempoSiguienteAtaque)
-        return;
 
-    isAttacking = true;
-
-    Debug.Log(name + " ATACA");
-
-    if (anim != null)
+    public void ExecuteAttackBasic()
     {
-        anim.SetTrigger(AttackHash);
+        if (isDead || Time.time < nextAttackTime) return;
+        ExecuteAutoAttack();
     }
 
-    tiempoSiguienteAtaque =
-        Time.time + (1f / stats.attackSpeed);
-
-    if (currentTarget == null)
-        return;
-
-    float danoFinal = attackDamage * porcentaje;
-
-    if (currentTarget.TryGetComponent(out IDamageable damageable))
+    /// <summary>
+    /// 1.prioridad busca el enemigo con menor vida dentro del rango de detección ,para futuros posibles agregar, prioridad escojible
+    /// </summary>
+    private void BuscarEnemigoCercano()
     {
-        damageable.TakeDamage(danoFinal);
-        Debug.Log($"[{name}] Golpeó a {currentTarget.name} infligiendo {danoFinal} de daño.");
+        Collider[] enemigos = Physics.OverlapSphere(transform.position, detectionRange);
+        Transform mejorObjetivo = null;
+        float menorVida = float.MaxValue;
+
+        foreach (Collider col in enemigos)
+        {
+            // Busca Shards
+            if (col.TryGetComponent(out Shard_Controller shard))
+            {
+                if (shard.myTeam != myTeam && shard.GetHealth() < menorVida)
+                {
+                    menorVida = shard.GetHealth();
+                    mejorObjetivo = col.transform;
+                }
+            }
+            // Busca Sentinels
+            else if (col.TryGetComponent(out Sentinel_Controller sentinel))
+            {
+                if (sentinel.myTeam != myTeam && !sentinel.IsDead && sentinel.CurrentHealth < menorVida)
+                {
+                    menorVida = sentinel.CurrentHealth;
+                    mejorObjetivo = col.transform;
+                }
+            }
+            // Busca Héroes enemigos
+            else if (col.TryGetComponent(out HeroController hero))
+            {
+                if (hero != this && hero.myTeam != myTeam && !hero.IsDead && hero.CurrentHealth < menorVida)
+                {
+                    menorVida = hero.CurrentHealth;
+                    mejorObjetivo = col.transform;
+                }
+            }
+        }
+
+        currentTarget = mejorObjetivo;
     }
-    else if (currentTarget.TryGetComponent(out Sentinel_Controller enemySentinel))
+
+    /// <summary>
+    /// Rutina de ataque automático continuo
+    /// </summary>
+    private IEnumerator AutoAttackRoutine()
     {
-        // Casos especiales como estructuras que quizás no usan la interfaz aún
-        enemySentinel.TakeDamage(danoFinal);
+        while (autoAttackEnabled && !isDead)
+        {
+            // Si no hay objetivo, busca uno
+            if (currentTarget == null)
+            {
+                BuscarEnemigoCercano();
+            }
+
+            // Si hay objetivo y está en rango, ataca
+            if (currentTarget != null)
+            {
+                float distancia = Vector3.Distance(transform.position, currentTarget.position);
+                if (distancia <= stats.attackRange)
+                {
+                    // Rota hacia el objetivo, en navmesh lo aumento a 1000 o dependiendo de como lo vea 
+                    Vector3 direccion = (currentTarget.position - transform.position).normalized;
+                    Quaternion targetRotation = Quaternion.LookRotation(direccion);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
+
+                  
+                    ExecuteAutoAttack();
+                }
+                else
+                {
+                    // Se mueve hacia el objetivo si está fuera de rango, rango de seguimiento 
+                    if (agent != null && agent.enabled)
+                    {
+                        agent.SetDestination(currentTarget.position);
+                    }
+                }
+            }
+
+            yield return null;
+        }
     }
-}    private void AplicarDanoRaycastSimulado()//debug para simular el ataque básico mientras no tengo los personajes ni las animaciones definitivas, luego se puede reemplazar por la lógica real de daño que quiera implementar.
+
+    /// <summary>
+    /// Ejecuta un ataque automático del combo, recordar pasar esto a un enum o scriponjet porque no todos los ataquen van a ser iguales para los heroes , entonces creo algo que permita editar los combos 
+    /// </summary>
+    private void ExecuteAutoAttack()
     {
-       
+        if (Time.time < nextAttackTime)
+            return;
+
+        // Verifica
+        if (attackCount >= attacksBeforeBurst)
+        {
+            TriggerBurstAttack();
+            return;
+        }
+
+        // Dispara la animación 
+        if (attackCount == 0)
+        {
+            PlayBasicAttackFull();
+        }
+        else
+        {
+            PlayBasicAttackQuick();
+        }
+
+        attackCount++;
+        nextAttackTime = Time.time + (attackCount <= 1 ? normalAttackCooldown : quickAttackCooldown);
+    }
+
+    private void PlayBasicAttackFull()
+    {
+        isAttacking = true;
+
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.ResetTrigger("AttackQuick");
+            anim.SetTrigger("Attack");
+        }
+
+        Debug.Log(name + " realiza un ataque COMPLETO con un arma (Automático)");
+        AplicarDanoAlObjetivo();
+    }
+
+    private void PlayBasicAttackQuick()
+    {
+        isAttacking = true;
+
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.ResetTrigger("AttackQuick"); 
+            anim.SetTrigger("AttackQuick");
+        }
+
+        Debug.Log(name + " realiza ataque RÁPIDO automático (Combo: " + attackCount + ")");
+        AplicarDanoAlObjetivo();
+    }
+
+    private void TriggerBurstAttack()
+    {
+        if (isInBurstMode) return;
+
+        isAttacking = true;
+
+        if (anim != null)
+        {
+            anim.ResetTrigger("Attack");
+            anim.ResetTrigger("AttackQuick");
+            anim.ResetTrigger("Burst");
+            anim.SetTrigger("Burst");
+        }
+
+        Debug.Log(name + " ¡Activó la RÁFAGA automática con ambas manos!");
+        AplicarDanoAlObjetivo();
+
+        isInBurstMode = true;
+        attackCount = 0;
+        nextAttackTime = Time.time + burstAttackCooldown;
+
+        StartCoroutine(ResetBurstMode());
+    }
+
+    private IEnumerator ResetBurstMode()
+    {
+        yield return new WaitForSeconds(1.0f);
+        isInBurstMode = false;
+        isAttacking = false;
+        Debug.Log(name + " - Modo ráfaga terminado");
+    }
+
+    /// <summary>
+    /// Lógica central de combate: aplica daño al objetivo actual.
+    /// Se simplifica usando la interfaz IDamageable para funcionar con cualquier entidad.
+    /// </summary>
+    private void AplicarDanoAlObjetivo()
+    {
+        if (currentTarget == null) return;
+
+        float danoFinal = attackDamage * porcentaje;
+
+        // Intentamos obtener la interfaz IDamageable que comparten Shards, Sentinels y Heroes
+        if (currentTarget.TryGetComponent(out IDamageable victim))
+        {
+            victim.TakeDamage(danoFinal);
+            
+            // Si el objetivo muere, limpiamos la referencia para buscar uno nuevo
+            if (victim.IsDead) currentTarget = null;
+        }
+    }
+
+    private void AplicarDanoRaycastSimulado()
+    {
         RaycastHit hit;
         if (Physics.Raycast(transform.position + Vector3.up * 0.5f, transform.forward, out hit, stats.attackRange))
         {
@@ -298,12 +528,12 @@ public class HeroController : MonoBehaviour, IDamageable
     }
 
     private void ResetearEstadoAtaqueSimulado()
-{
-    if (Time.time >= tiempoSiguienteAtaque)
     {
-        isAttacking = false;
+        if (Time.time >= nextAttackTime && isAttacking)
+        {
+            isAttacking = false;
+        }
     }
-}
 
     private void SetAnimatorFloatSafe(string paramName, float value)
     {
@@ -350,6 +580,12 @@ public class HeroController : MonoBehaviour, IDamageable
     private void Die()
     {
         isDead = true;
+        autoAttackEnabled = false;
+        if (autoAttackRoutine != null)
+        {
+            StopCoroutine(autoAttackRoutine);
+            autoAttackRoutine = null;
+        }
         if (botAI != null) botAI.DesactivarBot();
         if (agent != null)
         {
@@ -375,6 +611,15 @@ public class HeroController : MonoBehaviour, IDamageable
         isDead = false;
         currentHealth = stats.maxHealth;
         tiempoInactivo = 0f;
+        attackCount = 0;
+        isInBurstMode = false;
+        
+        if (autoAttackRoutine != null)
+        {
+            StopCoroutine(autoAttackRoutine);
+            autoAttackRoutine = null;
+        }
+        autoAttackEnabled = false;
         
         if (teamRespawnPoint != null)
             transform.position = teamRespawnPoint.position;
@@ -393,7 +638,7 @@ public class HeroController : MonoBehaviour, IDamageable
         Debug.Log("[RESPAWN] El héroe ha vuelto a la batalla.");
     }
 
-    public void LevelExperience(float cantidad)//Experimental
+    public void LevelExperience(float cantidad)
     {
         if (nivel >= maxLevel) return;
 

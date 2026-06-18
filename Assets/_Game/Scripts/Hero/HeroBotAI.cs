@@ -17,7 +17,7 @@ public class HeroBotAI : MonoBehaviour
         HaciendoObjetivos
     }
 
-    public enum DificultadBot { Facil, Normal, Dificil, Pro, Aleatoria }
+    public enum DificultadBot { Facil, Normal, Dificil, Pro, Aleatoria }// esto es porque no tengo multiplayer :(
 
     private EstadoBot estadoActual = EstadoBot.Apagado;
     private DificultadBot dificultadConfigurada = DificultadBot.Aleatoria;
@@ -149,7 +149,7 @@ public class HeroBotAI : MonoBehaviour
             estadoActual = EstadoBot.Retirada;
         }
         
-        // Si estamos en combate y nos pega una torre, prioridad máxima: huir del rango de la torre
+        // Si estamos en combate y nos pega una torre, prioridad máxima huir del rango de la torre
         if (CheckTorreEnemigaPegandome()) {
             estadoActual = EstadoBot.Retirada;
         }
@@ -250,7 +250,7 @@ public class HeroBotAI : MonoBehaviour
         }
 
         // Buscar Objetivos Globales (Dragón) si no hay nada urgente en línea
-        if (estadoActual == EstadoBot.Navegando && Time.time % 5f < 0.1f) // Escaneo macro cada 5 seg
+        if (estadoActual == EstadoBot.Navegando && Time.time % 5f < 0.1f) // Escaneo cada 5 seg
         { // Usar el dragón cacheado
             if (cachedDragon != null && !cachedDragon.IsDead && Vector3.Distance(transform.position, cachedDragon.transform.position) < 25f)
                 estadoActual = EstadoBot.HaciendoObjetivos;
@@ -302,7 +302,7 @@ public class HeroBotAI : MonoBehaviour
         float mejorPuntuacion = -1f;
         Transform objetivoCandidato = null;
 
-        for (int i = 0; i < numColliders; i++) // Iterar sobre los colliders encontrados
+        for (int i = 0; i < numColliders; i++) 
         {
             Collider col = overlapBuffer[i];
             if (col == null) continue;
@@ -332,7 +332,7 @@ public class HeroBotAI : MonoBehaviour
                 if (minion.CurrentHealth <= controller.attackDamage * 1.2f) 
                     puntuacion += 150f; 
             }
-            else if (col.TryGetComponent(out Sentinel_Health tower))
+            else if (col.TryGetComponent(out Sentinel_Controller tower))
             {
                 if (!EsSeguroAtacarTorre()) continue;
                 puntuacion = 30f;
@@ -451,14 +451,13 @@ public class HeroBotAI : MonoBehaviour
         return;
     }
 
-    // Usamos distancia 2D (ignorando Y) para evitar problemas con desniveles del terreno
     Vector3 posPropia = new Vector3(transform.position.x, 0, transform.position.z);
     Vector3 posObjetivo = new Vector3(objetivoActual.position.x, 0, objetivoActual.position.z);
     float distanciaObjetivo = Vector3.Distance(posPropia, posObjetivo);
 
     float rangoEfectivo = controller.AttackRange;
 
-    // Fuera de rango → perseguir
+    // Fuera de rango  perseguir
     if (distanciaObjetivo > rangoEfectivo)
     {
         agent.stoppingDistance =
@@ -477,8 +476,8 @@ public class HeroBotAI : MonoBehaviour
     }
     else
     {
-        // ORB-WALKING: Si el ataque está en cooldown, nos movemos un poco para reposicionarnos
-        // Esto hace que el bot no se quede estático como un poste.
+        // Si el ataque está en cooldown, nos movemos un poco para reposicionarnos ORB-WALKING
+        // Inteligencia al animal
         if (controller.IsAttacking) 
         {
             if (agent.hasPath) agent.ResetPath();
@@ -515,7 +514,7 @@ public class HeroBotAI : MonoBehaviour
         if (!controller.IsAttacking)
         {
             // Uso de habilidades si el enemigo está bajo de vida
-            if (objetivoActual.TryGetComponent(out IDamageable d) && d.CurrentHealth / d.MaxHealth < 0.4f) // Usar MaxHealth para porcentaje
+            if (objetivoActual.TryGetComponent(out IDamageable d) && (d.CurrentHealth / d.MaxHealth) < 0.4f)
             {
                 controller.ExecuteSkill();
             }
@@ -530,7 +529,7 @@ public class HeroBotAI : MonoBehaviour
         estadoActual = EstadoBot.Retirada;
     }
 
-    // Si el enemigo huye a su torre y no es una kill segura, abortar
+    // Si el enemigo huye a su torre y no es una kill segura,se regresa obvio , perooooo esto deberia varias de la dificultad seleccionada
     if (Vector3.Distance(objetivoActual.position, transform.position) > distanciaMaximaPersecucion)
     {
         estadoActual = EstadoBot.Navegando;
@@ -586,7 +585,7 @@ public class HeroBotAI : MonoBehaviour
 
     private void LogicaHaciendoObjetivos()
     {
-        if (cachedDragon == null || cachedDragon.IsDead) // Usar el dragón cacheado
+        if (cachedDragon == null || cachedDragon.IsDead) // Usar el dragón 
         {
             estadoActual = EstadoBot.Navegando;
             return;
@@ -610,7 +609,7 @@ public class HeroBotAI : MonoBehaviour
 
     private void LogicaEspera()
     {
-        // Esperar en arbustos o puntos estratégicos (Simulado)
+        // Esperar en arbustos o puntos estratégicos (Simulado) el mapa puede cambiar 
         if (CheckEnemigosCerca(radioDeteccion)) 
             estadoActual = EstadoBot.Combate;
     }

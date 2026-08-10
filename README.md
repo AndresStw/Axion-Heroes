@@ -22,7 +22,7 @@ An action-packed MOBA/RPG game developed in **Unity** featuring dynamic hero con
 
 ## 🎯 About the Project
 
-**Axion Heroes** is an action game that combines MOBA (Multiplayer Online Battle Arena) and RPG mechanics. Players control heroes with unique abilities, engage in tactical combat, and progress through experience and leveling systems. The game features both player-controlled and AI-driven heroes, creating dynamic gameplay scenarios.
+**Axion Heroes** is an action game that combines MOBA (Multiplayer Online Battle Arena) and RPG mechanics. Players control heroes with unique abilities, engage in tactical combat, and progress thr[...]
 
 ---
 
@@ -103,10 +103,10 @@ Assets/
 │   │       └── MobileJoystick.cs          # Mobile input handling
 │   ├── Animations/
 │   │   ├── Heroes/                        # Hero animator controllers
-│   │   └── Enemies/                       # Enemy animators
+│   │   │   └── Enemies/                   # Enemy animators
 │   ├── Prefabs/
 │   │   ├── Heroes/                        # Hero prefabs
-│   │   └── Enemies/                       # Enemy prefabs
+│   │   │   └── Enemies/                   # Enemy prefabs
 │   └── Data/
 │       └── Heroes/                        # Hero stat ScriptableObjects
 ```
@@ -255,7 +255,7 @@ Contributions are welcome! Please follow these steps:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+4. Push to the branch (`git push origin feature-amazing-feature`)
 5. Open a Pull Request
 
 ---
@@ -305,3 +305,5 @@ This project is currently unlicensed. See the LICENSE file for details (if appli
 ---
 
 **Enjoy playing Axion Heroes!** 🎮✨
+
+Este repositorio está en pausa; todo el trabajo está enfocado en Subject-04.

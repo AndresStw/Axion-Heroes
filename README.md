@@ -1,6 +1,29 @@
 # 🎮 Axion Heroes
 
+![Unity](https://img.shields.io/badge/Unity-2020.3_LTS+-000000?style=flat&logo=unity&logoColor=white)
+![C%23](https://img.shields.io/badge/C%23-7.3+-239120?style=flat&logo=csharp&logoColor=white)
+![Status](https://img.shields.io/badge/Status-PAUSED-orange)
+![License](https://img.shields.io/badge/License-Unlicensed-lightgrey)
+
 An action-packed MOBA/RPG game developed in **Unity** featuring dynamic hero control systems, real-time combat, and AI-driven gameplay mechanics.
+
+---
+
+## ⏸️ Project Status: PAUSED
+
+**This project is currently paused.** Development was halted to focus on another project (**[SUBJECT_04](https://github.com/AndresStw/SUBJECT_04)**). This README is preserved as documentation of the state the project was left in, so it can be resumed without losing context.
+
+### 📌 Pause Summary
+
+| Aspect | Detail |
+|--------|--------|
+| **Status** | Paused (not abandoned) |
+| **Reason** | Focus shifted to SUBJECT_04 |
+| **Last Progress** | Core hero control, combat system, AI bots, and progression loop functional |
+| **What's Missing** | Multiplayer, final animations, UI polish, map design |
+| **To Resume** | See "How to Resume This Project" section below |
+
+> 💡 **Personal note:** Axion Heroes is still a project I want to finish. The pause is temporary and strategic, not a discard. The core gameplay loop already works — what's left is content and polish.
 
 ---
 
@@ -11,22 +34,34 @@ An action-packed MOBA/RPG game developed in **Unity** featuring dynamic hero con
 - [Core Systems](#core-systems)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
-- [Installation](#installation)
 - [Controls](#controls)
 - [Technologies](#technologies)
 - [Game Mechanics](#game-mechanics)
-- [Contributing](#contributing)
+- [Key Classes](#key-classes)
+- [Roadmap](#roadmap)
+- [Known Issues](#known-issues)
+- [How to Resume This Project](#how-to-resume-this-project)
+- [Contact](#contact)
 - [License](#license)
 
 ---
 
 ## 🎯 About the Project
 
-**Axion Heroes** is an action game that combines MOBA (Multiplayer Online Battle Arena) and RPG mechanics. Players control heroes with unique abilities, engage in tactical combat, and progress thr[...]
+**Axion Heroes** is an action game that combines MOBA (Multiplayer Online Battle Arena) and RPG mechanics. Players control heroes with unique abilities, engage in tactical combat, and progress through experience and leveling systems.
+
+The project was built as a learning ground for:
+- Hero controller architecture
+- NavMesh-based AI
+- Combat systems with cooldowns and damage types
+- Mobile input integration
+- ScriptableObject-driven data design
 
 ---
 
 ## ✨ Features
+
+### ✅ Implemented (functional at time of pause)
 
 - **Hero Control System**: Smooth character movement and rotation with NavMesh integration
 - **Combat System**: Basic attacks, special abilities, and ultimate skills with cooldown management
@@ -37,6 +72,17 @@ An action-packed MOBA/RPG game developed in **Unity** featuring dynamic hero con
 - **Respawn System**: Dynamic respawn timers based on hero level
 - **Animation System**: Integrated Animator controller for smooth character animations
 - **Enemy Variety**: Combat support for multiple enemy types (Shards, Sentinels, Heroes)
+
+### 🚧 Pending (for when resumed)
+
+- [ ] Multiplayer integration
+- [ ] Final hero models and animations (currently placeholders)
+- [ ] Map and environment design
+- [ ] Item system and upgrades
+- [ ] UI overhaul
+- [ ] Sound and music implementation
+- [ ] Particle effects and visual polish
+- [ ] Balance adjustments
 
 ---
 
@@ -84,226 +130,3 @@ An action-packed MOBA/RPG game developed in **Unity** featuring dynamic hero con
 ---
 
 ## 📁 Project Structure
-
-```
-Assets/
-├── _Game/
-│   ├── Scripts/
-│   │   ├── Hero/
-│   │   │   ├── HeroController.cs          # Main hero control logic
-│   │   │   ├── HeroBotAI.cs               # AI decision making
-│   │   │   └── HeroData.cs                # Hero statistics (ScriptableObject)
-│   │   ├── Enemies/
-│   │   │   ├── Shard_Controller.cs        # Shard enemy type
-│   │   │   └── Sentinel_Controller.cs     # Sentinel enemy type
-│   │   ├── Systems/
-│   │   │   ├── EvolutionManager.cs        # Experience & leveling system
-│   │   │   └── CombatSystem.cs            # Combat logic
-│   │   └── UI/
-│   │       └── MobileJoystick.cs          # Mobile input handling
-│   ├── Animations/
-│   │   ├── Heroes/                        # Hero animator controllers
-│   │   │   └── Enemies/                   # Enemy animators
-│   ├── Prefabs/
-│   │   ├── Heroes/                        # Hero prefabs
-│   │   │   └── Enemies/                   # Enemy prefabs
-│   └── Data/
-│       └── Heroes/                        # Hero stat ScriptableObjects
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Unity** 2020.3 LTS or newer
-- **C# 7.3** or later
-- NavMesh Agent component
-- Animator controller with the following parameters:
-  - `Speed` (Float)
-  - `Health` (Float)
-  - `Attack` (Trigger)
-  - `DoSkill` (Trigger)
-  - `DoUlti` (Trigger)
-  - `Die` (Trigger)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/AndresStw/Axion-Heroes.git
-   cd Axion-Heroes
-   ```
-
-2. **Open in Unity**
-   - Open Unity Hub
-   - Click "Add project from disk"
-   - Select the Axion-Heroes folder
-
-3. **Import Assets**
-   - Ensure all packages are imported
-   - Configure NavMesh for your scene
-
-4. **Set Up Hero Data**
-   - Create a `HeroData` ScriptableObject for each hero
-   - Configure stats (health, attack speed, range, etc.)
-   - Assign to HeroController
-
----
-
-## 🎮 Controls
-
-### Keyboard Controls (PC)
-
-| Input | Action |
-|-------|--------|
-| **W/A/S/D** | Move character |
-| **Space** | Basic attack |
-| **Q** | Special ability |
-| **R** | Ultimate ability |
-
-### Mobile Controls
-
-- **Joystick**: Move character
-- **Screen Tap**: Ability buttons (depends on UI implementation)
-
----
-
-## 🛠️ Technologies
-
-| Technology | Usage |
-|-----------|-------|
-| **Unity Engine** | Game development framework |
-| **C#** | Primary programming language (71.8%) |
-| **NavMesh** | AI pathfinding and movement |
-| **Animator** | Character animation system |
-| **ShaderLab** | Custom shaders (23.4%) |
-| **HLSL** | Shader compilation (4.8%) |
-
----
-
-## 🎮 Game Mechanics
-
-### Hero Attributes
-- **Max Health**: Total hero health points
-- **Attack Damage**: Base damage per attack
-- **Attack Speed**: Attacks per second
-- **Attack Range**: Distance for basic attacks
-- **Movement Speed**: Hero movement velocity
-- **Skill Cooldown**: Q ability cooldown
-- **Ulti Cooldown**: R ability cooldown
-
-### Experience Formula
-- Base experience for kills varies by enemy type
-- Experience scales with hero level
-- Tower destruction awards experience
-
-### Damage System
-- Damage = Base Damage × Multiplier
-- Type-specific interactions (Hero vs Shard vs Sentinel)
-- Health clamping (0 to max)
-
-### AI Behavior
-- **Idle State**: Waits for player input or combat triggers
-- **Combat State**: Engages enemies based on role
-- **Damaged State**: Reacts to received damage
-- **Dead State**: Awaits respawn
-
----
-
-## 📝 Key Classes
-
-### HeroController
-Main component handling hero logic:
-- Movement and rotation
-- Combat input and execution
-- Experience and leveling
-- Respawn mechanics
-- AI integration
-
-**Key Methods:**
-- `ExecuteAttackBasic()` - Performs basic attack
-- `ExecuteSkill()` - Activates Q ability
-- `ExecuteUltimate()` - Activates R ability
-- `TakeDamage(float damage)` - Receive damage
-- `LevelExperience(float cantidad)` - Gain experience
-- `Die()` - Hero death logic
-- `Respawn()` - Hero respawn logic
-
-### HeroBotAI
-Handles AI decision-making and behavior:
-- Role-based strategies
-- Enemy detection and targeting
-- Combat engagement logic
-- Damage response behavior
-
-### HeroData (ScriptableObject)
-Stores hero statistics:
-- Health points
-- Damage values
-- Speed attributes
-- Ability cooldowns
-- Hero role definition
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature-amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📋 Roadmap
-
-- [ ] Complete animation system
-- [ ] Multiplayer integration
-- [ ] Advanced hero abilities
-- [ ] Item system and upgrades
-- [ ] Map and environment design
-- [ ] Sound and music implementation
-- [ ] Particle effects and visual polish
-- [ ] UI overhaul
-- [ ] Balance adjustments
-
----
-
-## 🐛 Known Issues
-
-- Hero model and animations are placeholders
-- Some combat mechanics are simulated
-- Mobile input needs UI implementation
-
----
-
-## 💬 Contact
-
-**Author**: [AndresStw](https://github.com/AndresStw)
-
-For questions or suggestions, feel free to open an issue or reach out!
-
----
-
-## 📄 License
-
-This project is currently unlicensed. See the LICENSE file for details (if applicable).
-
----
-
-## 🙏 Acknowledgments
-
-- Unity community for resources and support
-- MOBA/RPG game design inspiration
-- All contributors and testers
-
----
-
-**Enjoy playing Axion Heroes!** 🎮✨
-
-Este repositorio está en pausa; todo el trabajo está enfocado en Subject-04.
